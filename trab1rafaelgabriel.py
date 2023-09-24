@@ -31,6 +31,8 @@ def listConfig(nomeArq):
 # Funcao para fazer a conta de quantos nos tem no circuito
 def calculoNos(listaConfig):
     maiorNo = 0
+    # Nesse for, a funcao ira olhar no por no de cada componente para encontrar o maior no
+    # E valido lembrar que a quantidade de nos do circuito sera o maior no + 1 ja que temos o no 0
     for componente in listaConfig:
         if int(componente[1]) > maiorNo:
             maiorNo = int(componente[1])
@@ -38,12 +40,16 @@ def calculoNos(listaConfig):
         if int(componente[2]) > maiorNo:
             maiorNo = int(componente[2])
 
-    return maiorNo
+    numeroDeNos = maiorNo + 1
+    return numeroDeNos
 
-def calculoMatrizCondutancia(listaConfig, maiorNo):
-    gm = np.zeros([maiorNo + 1,maiorNo + 1])
-    i = np.zeros(maiorNo + 1)
+# Funcao para montar a matriz de condutancia e a matriz resultado
+def calculoMatrizCondutancia(listaConfig, numeroDeNos):
+    # Criando as matrizes com base no numero de nos do circuito
+    gm = np.zeros([numeroDeNos,numeroDeNos])
+    i = np.zeros(numeroDeNos)
 
+    # For para identificar o componente e montar a matriz com base no seu valor
     for componente in listaConfig:
         if (componente[0][0] == 'I'):
             i[int(componente[1])] = i[int(componente[1])] - int(componente[4])
@@ -61,4 +67,23 @@ def calculoMatrizCondutancia(listaConfig, maiorNo):
             gm[int(componente[2])][int(componente[1])] = gm[int(componente[2])][int(componente[1])] - 1/int(componente[3])
             gm[int(componente[2])][int(componente[2])] = gm[int(componente[2])][int(componente[2])] + 1/int(componente[3])
 
+    gm = gm[1:,1:]
+    i = i[1:]
     return gm, i
+
+# Funcao main, que, atraves das outras funcoes, fara a conta para encontrar as tensoes nodais
+def main(arqNetlist):
+    listaConfig = listConfig(arqNetlist)
+    numeroDeNos = calculoNos(listaConfig)
+    gm, i = calculoMatrizCondutancia(listaConfig, numeroDeNos)
+
+    tensoesNodais = np.linalg.solve(gm, i)
+
+    return tensoesNodais
+
+if __name__ == '__main__':
+    print(main('netlist1.txt'))
+    print('')
+    print(main('netlist2.txt'))
+    print('')
+    print(main('netlist3.txt'))
