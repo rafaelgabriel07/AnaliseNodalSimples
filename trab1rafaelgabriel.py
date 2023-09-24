@@ -14,10 +14,10 @@ def listConfig(nomeArq):
         # De maneira resumida, o que estou fazendo é separar cada linha da netlist em uma linha da minha matriz de dados
         # E em cada linha, os dados estao despostos de uma maneira mais intuitica
         for caracter in linhaNetlist:
-            if (caracter != ' '):
+            if (caracter != ' ' and caracter != '\n'):
                 auxList.append(caracter)
 
-            elif (caracter == ' '):
+            else:
                 auxList2.append(''.join(auxList))
                 auxList = []
 
@@ -39,3 +39,18 @@ def calculoNos(listaConfig):
             maiorNo = int(componente[2])
 
     return maiorNo
+
+def calculoMatrizCondutancia(listaConfig, maiorNo):
+    gm = np.zeros([maiorNo + 1,maiorNo + 1])
+    i = np.zeros(maiorNo + 1)
+
+    for componente in listaConfig:
+        if (componente[0][0] == 'I'):
+            i[int(componente[1])] = i[int(componente[1])] - int(componente[4])
+            i[int(componente[2])] = i[int(componente[2])] + int(componente[4])
+
+    return gm, i
+
+gm, i = calculoMatrizCondutancia(listConfig('netlist1'), calculoNos(listConfig('netlist1')))
+print(gm)
+print(i)
