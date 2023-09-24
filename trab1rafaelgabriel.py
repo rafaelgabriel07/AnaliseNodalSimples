@@ -27,3 +27,15 @@ def listConfig(nomeArq):
     #print(listaConfig)
 
     return listaConfig
+
+# Funcao para fazer a conta de quantos nos tem no circuito
+def calculoNos(listaConfig):
+    maiorNo = 0
+    for componente in listaConfig:
+        if int(componente[1]) > maiorNo:
+            maiorNo = int(componente[1])
+
+        if int(componente[2]) > maiorNo:
+            maiorNo = int(componente[2])
+
+    return maiorNo
