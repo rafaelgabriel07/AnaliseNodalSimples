@@ -2,7 +2,7 @@ import numpy as np
 
 # A funcao abaixo foi criado com para eu dispor os dados da netlist de uma maneira que acho mais simples de trabalhar
 def listConfig(nomeArq):
-    arqNetlist = open(nomeArq + '.txt', 'r')
+    arqNetlist = open(nomeArq, 'r')
     linhaNetlist = arqNetlist.readline()
     listaConfig = []
 
@@ -49,8 +49,16 @@ def calculoMatrizCondutancia(listaConfig, maiorNo):
             i[int(componente[1])] = i[int(componente[1])] - int(componente[4])
             i[int(componente[2])] = i[int(componente[2])] + int(componente[4])
 
-    return gm, i
+        elif (componente [0][0] == 'G'):
+            gm[int(componente[1])][int(componente[3])] = gm[int(componente[1])][int(componente[3])] + int(componente[5])
+            gm[int(componente[1])][int(componente[4])] = gm[int(componente[1])][int(componente[4])] - int(componente[5])
+            gm[int(componente[2])][int(componente[3])] = gm[int(componente[2])][int(componente[3])] - int(componente[5])
+            gm[int(componente[2])][int(componente[4])] = gm[int(componente[2])][int(componente[4])] + int(componente[5])
+            
+        else:
+            gm[int(componente[1])][int(componente[1])] = gm[int(componente[1])][int(componente[1])] + 1/int(componente[3])
+            gm[int(componente[1])][int(componente[2])] = gm[int(componente[1])][int(componente[2])] - 1/int(componente[3])
+            gm[int(componente[2])][int(componente[1])] = gm[int(componente[2])][int(componente[1])] - 1/int(componente[3])
+            gm[int(componente[2])][int(componente[2])] = gm[int(componente[2])][int(componente[2])] + 1/int(componente[3])
 
-gm, i = calculoMatrizCondutancia(listConfig('netlist1'), calculoNos(listConfig('netlist1')))
-print(gm)
-print(i)
+    return gm, i
