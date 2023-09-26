@@ -1,3 +1,6 @@
+# Aluno: Rafael Gabriel
+# DRE: 121087555
+
 import numpy as np
 
 # A funcao abaixo foi criado com para eu dispor os dados da netlist de uma maneira que acho mais simples de trabalhar
