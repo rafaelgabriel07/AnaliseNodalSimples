@@ -2,6 +2,7 @@
 # DRE: 121087555
 
 import numpy as np
+import math
 
 # A funcao abaixo foi criado com para eu dispor os dados da netlist de uma maneira que acho mais simples de trabalhar
 def listConfig(nomeArq):
@@ -55,11 +56,15 @@ def calculoComponentesAnaliseModificada(listaConfig):
     numComponentesAnaliseModificada = 0
 
     for componente in listaConfig:
-        if (componente[0][0] == 'L' or componente[0][0] == 'F' or componente[0][0] == 'E' or componente[0][0] == 'H' or componente[0][0] == 'V'):
+        if (componente[0][0] == 'L' componente[0][0] == 'C' or componente[0][0] == 'F' or componente[0][0] == 'E' or componente[0][0] == 'V'):
             componentesAnaliseModificada.append([componente[0], numComponentesAnaliseModificada])
             numComponentesAnaliseModificada += 1
         
         elif (componente[0][0] == 'K'):
+            componentesAnaliseModificada.append([componente[0], numComponentesAnaliseModificada, numComponentesAnaliseModificada + 1])
+            numComponentesAnaliseModificada += 2
+
+        elif (componente[0][0] == 'H'):
             componentesAnaliseModificada.append([componente[0], numComponentesAnaliseModificada, numComponentesAnaliseModificada + 1])
             numComponentesAnaliseModificada += 2
 
@@ -77,20 +82,20 @@ def calculoMatrizes(listaConfig, numeroDeNos, tipoAnalise, numComponentesAnalise
         for componente in listaConfig:
 
             if (componente[0][0] == 'I'):
-                i[int(componente[1])] = i[int(componente[1])] - int(componente[4])
-                i[int(componente[2])] = i[int(componente[2])] + int(componente[4])
+                i[int(componente[1])] = i[int(componente[1])] - float(componente[4])
+                i[int(componente[2])] = i[int(componente[2])] + float(componente[4])
 
             elif (componente[0][0] == 'G'):
-                gm[int(componente[1])][int(componente[3])] = gm[int(componente[1])][int(componente[3])] + int(componente[5])
-                gm[int(componente[1])][int(componente[4])] = gm[int(componente[1])][int(componente[4])] - int(componente[5])
-                gm[int(componente[2])][int(componente[3])] = gm[int(componente[2])][int(componente[3])] - int(componente[5])
-                gm[int(componente[2])][int(componente[4])] = gm[int(componente[2])][int(componente[4])] + int(componente[5])
+                gm[int(componente[1])][int(componente[3])] = gm[int(componente[1])][int(componente[3])] + float(componente[5])
+                gm[int(componente[1])][int(componente[4])] = gm[int(componente[1])][int(componente[4])] - float(componente[5])
+                gm[int(componente[2])][int(componente[3])] = gm[int(componente[2])][int(componente[3])] - float(componente[5])
+                gm[int(componente[2])][int(componente[4])] = gm[int(componente[2])][int(componente[4])] + float(componente[5])
 
             elif (componente[0][0] == 'R'):
-                gm[int(componente[1])][int(componente[1])] = gm[int(componente[1])][int(componente[1])] + 1/int(componente[3])
-                gm[int(componente[1])][int(componente[2])] = gm[int(componente[1])][int(componente[2])] - 1/int(componente[3])
-                gm[int(componente[2])][int(componente[1])] = gm[int(componente[2])][int(componente[1])] - 1/int(componente[3])
-                gm[int(componente[2])][int(componente[2])] = gm[int(componente[2])][int(componente[2])] + 1/int(componente[3])
+                gm[int(componente[1])][int(componente[1])] = gm[int(componente[1])][int(componente[1])] + 1/float(componente[3])
+                gm[int(componente[1])][int(componente[2])] = gm[int(componente[1])][int(componente[2])] - 1/float(componente[3])
+                gm[int(componente[2])][int(componente[1])] = gm[int(componente[2])][int(componente[1])] - 1/float(componente[3])
+                gm[int(componente[2])][int(componente[2])] = gm[int(componente[2])][int(componente[2])] + 1/float(componente[3])
 
             elif (componente[0][0] == 'V'):
                 for componenteAnaliseModificada in componentesAnaliseModificada:
@@ -104,8 +109,49 @@ def calculoMatrizes(listaConfig, numeroDeNos, tipoAnalise, numComponentesAnalise
 
                 i[numeroDeNos + aux] = i[numeroDeNos + aux] - int(componente[4])
 
+            elif (componente[0][0] == 'E'):
+                for componenteAnaliseModificada in componentesAnaliseModificada:
+                    if (componente[0] == componenteAnaliseModificada[0]):
+                        aux = componenteAnaliseModificada[1]
+
+                gm[int(componente[1])][numeroDeNos + aux] = gm[int(componente[1])][numeroDeNos + aux] + 1
+                gm[int(componente[2])][numeroDeNos + aux] = gm[int(componente[2])][numeroDeNos + aux] - 1
+                gm[numeroDeNos + aux][int(componente[1])] = gm[numeroDeNos + aux][int(componente[1])] - 1
+                gm[numeroDeNos + aux][int(componente[2])] = gm[numeroDeNos + aux][int(componente[2])] + 1
+                gm[numeroDeNos + aux][int(componente[3])] = gm[numeroDeNos + aux][int(componente[3])] + float(componente[5])
+                gm[numeroDeNos + aux][int(componente[4])] = gm[numeroDeNos + aux][int(componente[4])] - float(componente[5])
+
+            elif (componente[0][0] == 'H'):
+                for componenteAnaliseModificada in componentesAnaliseModificada:
+                    if (componente[0] == componenteAnaliseModificada[0]):
+                        aux = componenteAnaliseModificada[1]
+                        aux2 = componenteAnaliseModificada[2]
+                
+                gm[int(componente[1])][numeroDeNos + aux2] = gm[int(componente[1])][numeroDeNos + aux2] + 1
+                gm[int(componente[2])][numeroDeNos + aux2] = gm[int(componente[2])][numeroDeNos + aux2] - 1
+                gm[int(componente[3])][numeroDeNos + aux] = gm[int(componente[3])][numeroDeNos + aux] + 1
+                gm[int(componente[4])][numeroDeNos + aux] = gm[int(componente[4])][numeroDeNos + aux] - 1
+                gm[numeroDeNos + aux][int(componente[3])] = gm[numeroDeNos + aux][int(componente[3])] - 1
+                gm[numeroDeNos + aux][int(componente[4])] = gm[numeroDeNos + aux][int(componente[4])] + 1
+                gm[numeroDeNos + aux2][int(componente[1])] = gm[numeroDeNos + aux2][int(componente[1])] - 1
+                gm[numeroDeNos + aux2][int(componente[2])] = gm[numeroDeNos + aux2][int(componente[2])] + 1
+                gm[numeroDeNos + aux2][numeroDeNos + aux] = gm[numeroDeNos + aux2][numeroDeNos + aux] + float(componente[5])
+
+            elif (componente[0][0] == 'F'):
+                for componenteAnaliseModificada in componentesAnaliseModificada:
+                    if (componente[0] == componenteAnaliseModificada[0]):
+                        aux = componenteAnaliseModificada[1]
+                
+                gm[int(componente[1])][numeroDeNos + aux] = gm[int(componente[1])][numeroDeNos + aux] + int(componente[5])
+                gm[int(componente[2])][numeroDeNos + aux] = gm[int(componente[2])][numeroDeNos + aux] - int(componente[5])
+                gm[int(componente[3])][numeroDeNos + aux] = gm[int(componente[3])][numeroDeNos + aux] + 1
+                gm[int(componente[4])][numeroDeNos + aux] = gm[int(componente[4])][numeroDeNos + aux] - 1
+                gm[numeroDeNos + aux][int(componente[3])] = gm[numeroDeNos + aux][int(componente[3])] - 1
+                gm[numeroDeNos + aux][int(componente[4])] = gm[numeroDeNos + aux][int(componente[4])] + 1
+
     gm = gm[1:,1:]
     i = i[1:]
+
     return gm, i
 
 # Funcao main, que, atraves das outras funcoes, fara a conta para encontrar as tensoes nodais
@@ -125,4 +171,4 @@ def main(arqNetlist, tipoSimulacao, nosDesejados, parametrosSimulacao = []):
     return tensoesNodaisDesejadas
 
 if __name__ == '__main__':
-    print(main('netlistDC1 - Copia.txt', 'DC', [2]))
+    print(main('netlistDC2 - Copia.txt', 'DC', [2,3,5,7,9,10], []))
