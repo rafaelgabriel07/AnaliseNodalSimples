@@ -46,6 +46,25 @@ def calculoNos(listaConfig):
     numeroDeNos = maiorNo + 1
     return numeroDeNos
 
+# Funcao para ver quais componentes são necessarios criar uma variaves de corrente
+def calculoComponentesAnaliseModificada(listaConfig):
+    # Essa lista vai nos auxiliar para falar da corrente do componente na matriz
+    componentesAnaliseModificada = []
+
+    # Essa variavel vai indicar quantas linhas e colunas terei que adicionar na matriz
+    numComponentesAnaliseModificada = 0
+    
+    for componente in listaConfig:
+        if (componente[0][0] == 'L' or componente[0][0] == 'F' or componente[0][0] == 'E' or componente[0][0] == 'H' or componente[0][0] == 'V'):
+            componentesAnaliseModificada.append([componente[0], numComponentesAnaliseModificada])
+            numComponentesAnaliseModificada += 1
+        
+        elif (componente[0][0] == 'K'):
+            componentesAnaliseModificada.append([componente[0], numComponentesAnaliseModificada, numComponentesAnaliseModificada + 1])
+            numComponentesAnaliseModificada += 2
+
+    return componentesAnaliseModificada, numComponentesAnaliseModificada
+
 # Funcao para montar a matriz de condutancia e a matriz resultado
 def calculoMatrizCondutancia(listaConfig, numeroDeNos):
     # Criando as matrizes com base no numero de nos do circuito
@@ -58,13 +77,13 @@ def calculoMatrizCondutancia(listaConfig, numeroDeNos):
             i[int(componente[1])] = i[int(componente[1])] - int(componente[4])
             i[int(componente[2])] = i[int(componente[2])] + int(componente[4])
 
-        elif (componente [0][0] == 'G'):
+        elif (componente[0][0] == 'G'):
             gm[int(componente[1])][int(componente[3])] = gm[int(componente[1])][int(componente[3])] + int(componente[5])
             gm[int(componente[1])][int(componente[4])] = gm[int(componente[1])][int(componente[4])] - int(componente[5])
             gm[int(componente[2])][int(componente[3])] = gm[int(componente[2])][int(componente[3])] - int(componente[5])
             gm[int(componente[2])][int(componente[4])] = gm[int(componente[2])][int(componente[4])] + int(componente[5])
             
-        else:
+        elif (componente[0][0] == 'R'):
             gm[int(componente[1])][int(componente[1])] = gm[int(componente[1])][int(componente[1])] + 1/int(componente[3])
             gm[int(componente[1])][int(componente[2])] = gm[int(componente[1])][int(componente[2])] - 1/int(componente[3])
             gm[int(componente[2])][int(componente[1])] = gm[int(componente[2])][int(componente[1])] - 1/int(componente[3])
@@ -90,8 +109,7 @@ def main(arqNetlist, tipoSimulacao, nosDesejados, parametrosSimulacao = []):
     return tensoesNodaisDesejadas
 
 if __name__ == '__main__':
-    print(main('netlist1.txt', 'DC', [2]))
+    lista, num = calculoComponentesAnaliseModificada(listConfig('netlistDC2 - Copia.txt'))
+    print(lista)
     print('')
-    print(main('netlist2.txt', 'DC', [2,4]))
-    print('')
-    print(main('netlist3.txt', 'DC', [1,5,7]))
+    print(num)
