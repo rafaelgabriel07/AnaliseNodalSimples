@@ -53,7 +53,7 @@ def calculoComponentesAnaliseModificada(listaConfig):
 
     # Essa variavel vai indicar quantas linhas e colunas terei que adicionar na matriz
     numComponentesAnaliseModificada = 0
-    
+
     for componente in listaConfig:
         if (componente[0][0] == 'L' or componente[0][0] == 'F' or componente[0][0] == 'E' or componente[0][0] == 'H' or componente[0][0] == 'V'):
             componentesAnaliseModificada.append([componente[0], numComponentesAnaliseModificada])
@@ -66,28 +66,43 @@ def calculoComponentesAnaliseModificada(listaConfig):
     return componentesAnaliseModificada, numComponentesAnaliseModificada
 
 # Funcao para montar a matriz de condutancia e a matriz resultado
-def calculoMatrizCondutancia(listaConfig, numeroDeNos):
+def calculoMatrizes(listaConfig, numeroDeNos, tipoAnalise, numComponentesAnaliseModificada, componentesAnaliseModificada):
+
     # Criando as matrizes com base no numero de nos do circuito
-    gm = np.zeros([numeroDeNos,numeroDeNos])
-    i = np.zeros(numeroDeNos)
+    gm = np.zeros([numeroDeNos + numComponentesAnaliseModificada, numeroDeNos + numComponentesAnaliseModificada])
+    i = np.zeros(numeroDeNos + numComponentesAnaliseModificada)
 
     # For para identificar o componente e montar a matriz com base no seu valor
-    for componente in listaConfig:
-        if (componente[0][0] == 'I'):
-            i[int(componente[1])] = i[int(componente[1])] - int(componente[4])
-            i[int(componente[2])] = i[int(componente[2])] + int(componente[4])
+    if (tipoAnalise == 'DC'):
+        for componente in listaConfig:
 
-        elif (componente[0][0] == 'G'):
-            gm[int(componente[1])][int(componente[3])] = gm[int(componente[1])][int(componente[3])] + int(componente[5])
-            gm[int(componente[1])][int(componente[4])] = gm[int(componente[1])][int(componente[4])] - int(componente[5])
-            gm[int(componente[2])][int(componente[3])] = gm[int(componente[2])][int(componente[3])] - int(componente[5])
-            gm[int(componente[2])][int(componente[4])] = gm[int(componente[2])][int(componente[4])] + int(componente[5])
-            
-        elif (componente[0][0] == 'R'):
-            gm[int(componente[1])][int(componente[1])] = gm[int(componente[1])][int(componente[1])] + 1/int(componente[3])
-            gm[int(componente[1])][int(componente[2])] = gm[int(componente[1])][int(componente[2])] - 1/int(componente[3])
-            gm[int(componente[2])][int(componente[1])] = gm[int(componente[2])][int(componente[1])] - 1/int(componente[3])
-            gm[int(componente[2])][int(componente[2])] = gm[int(componente[2])][int(componente[2])] + 1/int(componente[3])
+            if (componente[0][0] == 'I'):
+                i[int(componente[1])] = i[int(componente[1])] - int(componente[4])
+                i[int(componente[2])] = i[int(componente[2])] + int(componente[4])
+
+            elif (componente[0][0] == 'G'):
+                gm[int(componente[1])][int(componente[3])] = gm[int(componente[1])][int(componente[3])] + int(componente[5])
+                gm[int(componente[1])][int(componente[4])] = gm[int(componente[1])][int(componente[4])] - int(componente[5])
+                gm[int(componente[2])][int(componente[3])] = gm[int(componente[2])][int(componente[3])] - int(componente[5])
+                gm[int(componente[2])][int(componente[4])] = gm[int(componente[2])][int(componente[4])] + int(componente[5])
+
+            elif (componente[0][0] == 'R'):
+                gm[int(componente[1])][int(componente[1])] = gm[int(componente[1])][int(componente[1])] + 1/int(componente[3])
+                gm[int(componente[1])][int(componente[2])] = gm[int(componente[1])][int(componente[2])] - 1/int(componente[3])
+                gm[int(componente[2])][int(componente[1])] = gm[int(componente[2])][int(componente[1])] - 1/int(componente[3])
+                gm[int(componente[2])][int(componente[2])] = gm[int(componente[2])][int(componente[2])] + 1/int(componente[3])
+
+            elif (componente[0][0] == 'V'):
+                for componenteAnaliseModificada in componentesAnaliseModificada:
+                    if (componente[0] == componenteAnaliseModificada[0]):
+                        aux = componenteAnaliseModificada[1]
+                
+                gm[int(componente[1])][numeroDeNos + aux] = gm[int(componente[1])][numeroDeNos + aux] + 1
+                gm[int(componente[2])][numeroDeNos + aux] = gm[int(componente[2])][numeroDeNos + aux] - 1
+                gm[numeroDeNos + aux][int(componente[1])] = gm[numeroDeNos + aux][int(componente[1])] - 1
+                gm[numeroDeNos + aux][int(componente[2])] = gm[numeroDeNos + aux][int(componente[2])] + 1
+
+                i[numeroDeNos + aux] = i[numeroDeNos + aux] - int(componente[4])
 
     gm = gm[1:,1:]
     i = i[1:]
@@ -98,7 +113,8 @@ def main(arqNetlist, tipoSimulacao, nosDesejados, parametrosSimulacao = []):
     if (tipoSimulacao == 'DC'):
         listaConfig = listConfig(arqNetlist)
         numeroDeNos = calculoNos(listaConfig)
-        gm, i = calculoMatrizCondutancia(listaConfig, numeroDeNos)
+        componentesModificados, numComponentesModificados = calculoComponentesAnaliseModificada(listaConfig)
+        gm, i = calculoMatrizes(listaConfig, numeroDeNos, tipoSimulacao, numComponentesModificados, componentesModificados)
 
         tensoesNodais = np.linalg.solve(gm, i)
         tensoesNodaisDesejadas = []
@@ -109,7 +125,4 @@ def main(arqNetlist, tipoSimulacao, nosDesejados, parametrosSimulacao = []):
     return tensoesNodaisDesejadas
 
 if __name__ == '__main__':
-    lista, num = calculoComponentesAnaliseModificada(listConfig('netlistDC2 - Copia.txt'))
-    print(lista)
-    print('')
-    print(num)
+    print(main('netlistDC1 - Copia.txt', 'DC', [2]))
