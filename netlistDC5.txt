@@ -1,0 +1,8 @@
+* Chamada da funcao main:
+* main('netlistDC5.txt', 'DC', [2], [])
+* Resultado esperado: [10.]
+
+V1 1 0 DC 10
+R1 1 2 2
+L1 1 2 1
+R2 2 0 3
