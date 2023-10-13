@@ -75,18 +75,23 @@ def calculoMatrizCondutancia(listaConfig, numeroDeNos):
     return gm, i
 
 # Funcao main, que, atraves das outras funcoes, fara a conta para encontrar as tensoes nodais
-def main(arqNetlist):
-    listaConfig = listConfig(arqNetlist)
-    numeroDeNos = calculoNos(listaConfig)
-    gm, i = calculoMatrizCondutancia(listaConfig, numeroDeNos)
+def main(arqNetlist, tipoSimulacao, nosDesejados, parametrosSimulacao = []):
+    if (tipoSimulacao == 'DC'):
+        listaConfig = listConfig(arqNetlist)
+        numeroDeNos = calculoNos(listaConfig)
+        gm, i = calculoMatrizCondutancia(listaConfig, numeroDeNos)
 
-    tensoesNodais = np.linalg.solve(gm, i)
+        tensoesNodais = np.linalg.solve(gm, i)
+        tensoesNodaisDesejadas = []
 
-    return tensoesNodais
+        for no in nosDesejados:
+            tensoesNodaisDesejadas.append(tensoesNodais[no - 1])
+            
+    return tensoesNodaisDesejadas
 
 if __name__ == '__main__':
-    print(main('netlist1.txt'))
+    print(main('netlist1.txt', 'DC', [2]))
     print('')
-    print(main('netlist2.txt'))
+    print(main('netlist2.txt', 'DC', [2,4]))
     print('')
-    print(main('netlist3.txt'))
+    print(main('netlist3.txt', 'DC', [1,5,7]))
