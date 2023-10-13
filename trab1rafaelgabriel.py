@@ -56,7 +56,7 @@ def calculoComponentesAnaliseModificada(listaConfig):
     numComponentesAnaliseModificada = 0
 
     for componente in listaConfig:
-        if (componente[0][0] == 'L' componente[0][0] == 'C' or componente[0][0] == 'F' or componente[0][0] == 'E' or componente[0][0] == 'V'):
+        if (componente[0][0] == 'L' or componente[0][0] == 'C' or componente[0][0] == 'F' or componente[0][0] == 'E' or componente[0][0] == 'V'):
             componentesAnaliseModificada.append([componente[0], numComponentesAnaliseModificada])
             numComponentesAnaliseModificada += 1
         
