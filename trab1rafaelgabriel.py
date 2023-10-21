@@ -7,17 +7,17 @@ import math
 # A funcao abaixo foi criado com para eu dispor os dados da netlist de uma maneira que acho mais simples de trabalhar
 def listConfig(nomeArq):
     arqNetlist = open(nomeArq, 'r')
-    linhaNetlist = arqNetlist.readline()
+    linhasArq = arqNetlist.readlines()
     listaConfig = []
 
-    while (linhaNetlist != ''):
+    for linha in linhasArq:
         auxList = []
         auxList2 = []
         
         # Fazendo a organizacao da lista
         # De maneira resumida, o que estou fazendo é separar cada linha da netlist em uma linha da minha matriz de dados
         # E em cada linha, os dados estao despostos de uma maneira mais intuitica
-        for caracter in linhaNetlist:
+        for caracter in linha:
             if (caracter != ' ' and caracter != '\n'):
                 auxList.append(caracter)
 
@@ -25,10 +25,13 @@ def listConfig(nomeArq):
                 auxList2.append(''.join(auxList))
                 auxList = []
 
+        # Por conta dos arquivos de texto nao terem um \n na ultima linha, eu tenho que adicionar o ultimo caracter do arquivo manualmente com esse if
+        if (len(auxList) != 0):
+            auxList2.append(auxList[0])
+
         listaConfig.append(auxList2)
-        linhaNetlist = arqNetlist.readline()
     arqNetlist.close()
-    #print(listaConfig[4:])
+    print(listaConfig)
 
     # Para esse segundo trabalho, eu começo a contar apenas da 5 linha pois para os arquivos DC 
     # as primeias linhas dos arquivos possui as instruções para a chamada da função e o que deve retornar
