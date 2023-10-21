@@ -2,14 +2,12 @@
 # DRE: 121087555
 
 import numpy as np
-import math
 
 # A funcao abaixo foi criado com para eu dispor os dados da netlist de uma maneira que acho mais simples de trabalhar
 def listConfig(nomeArq):
     arqNetlist = open(nomeArq, 'r')
     linhasArq = arqNetlist.readlines()
     listaConfig = []
-
     for linha in linhasArq:
         auxList = []
         auxList2 = []
@@ -27,11 +25,10 @@ def listConfig(nomeArq):
 
         # Por conta dos arquivos de texto nao terem um \n na ultima linha, eu tenho que adicionar o ultimo caracter do arquivo manualmente com esse if
         if (len(auxList) != 0):
-            auxList2.append(auxList[0])
+            auxList2.append(''.join(auxList))
 
         listaConfig.append(auxList2)
     arqNetlist.close()
-    print(listaConfig)
 
     # Para esse segundo trabalho, eu começo a contar apenas da 5 linha pois para os arquivos DC 
     # as primeias linhas dos arquivos possui as instruções para a chamada da função e o que deve retornar
@@ -57,25 +54,39 @@ def calculoNos(listaConfig):
     return numeroDeNos
 
 # Funcao para ver quais componentes são necessarios criar uma variaves de corrente
-def calculoComponentesAnaliseModificada(listaConfig):
+def calculoComponentesAnaliseModificada(listaConfig, tipoAnalise):
     # Essa lista vai nos auxiliar para falar da corrente do componente na matriz
     componentesAnaliseModificada = []
 
     # Essa variavel vai indicar quantas linhas e colunas terei que adicionar na matriz
     numComponentesAnaliseModificada = 0
 
-    for componente in listaConfig:
-        if (componente[0][0] == 'L' or componente[0][0] == 'C' or componente[0][0] == 'F' or componente[0][0] == 'E' or componente[0][0] == 'V'):
-            componentesAnaliseModificada.append([componente[0], numComponentesAnaliseModificada])
-            numComponentesAnaliseModificada += 1
-        
-        elif (componente[0][0] == 'K'):
-            componentesAnaliseModificada.append([componente[0], numComponentesAnaliseModificada, numComponentesAnaliseModificada + 1])
-            numComponentesAnaliseModificada += 2
+    # Separei nesse if por que para a analise DC, nos podemos considerar o capacitor como um circuito aberto
+    # e o indutor como um curto, nao precisamos tratar eles como componentes diferente.
+    # o transformador nada mais é do que dois curtos
+    if (tipoAnalise == 'DC'):
+        for componente in listaConfig:
+            if (componente[0][0] == 'F' or componente[0][0] == 'E' or componente[0][0] == 'V'):
+                componentesAnaliseModificada.append([componente[0], numComponentesAnaliseModificada])
+                numComponentesAnaliseModificada += 1
 
-        elif (componente[0][0] == 'H'):
-            componentesAnaliseModificada.append([componente[0], numComponentesAnaliseModificada, numComponentesAnaliseModificada + 1])
-            numComponentesAnaliseModificada += 2
+            elif (componente[0][0] == 'H'):
+                componentesAnaliseModificada.append([componente[0], numComponentesAnaliseModificada, numComponentesAnaliseModificada + 1])
+                numComponentesAnaliseModificada += 2
+    
+    else:
+        for componente in listaConfig:
+            if (componente[0][0] == 'L' or componente[0][0] == 'C' or componente[0][0] == 'F' or componente[0][0] == 'E' or componente[0][0] == 'V'):
+                componentesAnaliseModificada.append([componente[0], numComponentesAnaliseModificada])
+                numComponentesAnaliseModificada += 1
+
+            elif (componente[0][0] == 'K'):
+                componentesAnaliseModificada.append([componente[0], numComponentesAnaliseModificada, numComponentesAnaliseModificada + 1])
+                numComponentesAnaliseModificada += 2
+
+            elif (componente[0][0] == 'H'):
+                componentesAnaliseModificada.append([componente[0], numComponentesAnaliseModificada, numComponentesAnaliseModificada + 1])
+                numComponentesAnaliseModificada += 2
 
     return componentesAnaliseModificada, numComponentesAnaliseModificada
 
@@ -88,6 +99,7 @@ def calculoMatrizes(listaConfig, numeroDeNos, tipoAnalise, numComponentesAnalise
 
     # For para identificar o componente e montar a matriz com base no seu valor
     if (tipoAnalise == 'DC'):
+        # Obs: nao temos a estampa para capacitor aqui pois ele representa, em DC, um circuito aberto, logo nao precisamos adicionar nada
         for componente in listaConfig:
 
             if (componente[0][0] == 'I'):
@@ -105,6 +117,13 @@ def calculoMatrizes(listaConfig, numeroDeNos, tipoAnalise, numComponentesAnalise
                 gm[int(componente[1])][int(componente[2])] = gm[int(componente[1])][int(componente[2])] - 1/float(componente[3])
                 gm[int(componente[2])][int(componente[1])] = gm[int(componente[2])][int(componente[1])] - 1/float(componente[3])
                 gm[int(componente[2])][int(componente[2])] = gm[int(componente[2])][int(componente[2])] + 1/float(componente[3])
+
+            elif (componente[0][0] == 'L'):
+                # Como aqui temos um curto, coloquei um valor de condutância muito alto, para representar esse curto
+                gm[int(componente[1])][int(componente[1])] = gm[int(componente[1])][int(componente[1])] + 10000000000000000000000
+                gm[int(componente[1])][int(componente[2])] = gm[int(componente[1])][int(componente[2])] - 10000000000000000000000
+                gm[int(componente[2])][int(componente[1])] = gm[int(componente[2])][int(componente[1])] - 10000000000000000000000
+                gm[int(componente[2])][int(componente[2])] = gm[int(componente[2])][int(componente[2])] + 10000000000000000000000
 
             elif (componente[0][0] == 'V'):
                 for componenteAnaliseModificada in componentesAnaliseModificada:
@@ -168,7 +187,7 @@ def main(arqNetlist, tipoSimulacao, nosDesejados, parametrosSimulacao = []):
     if (tipoSimulacao == 'DC'):
         listaConfig = listConfig(arqNetlist)
         numeroDeNos = calculoNos(listaConfig)
-        componentesModificados, numComponentesModificados = calculoComponentesAnaliseModificada(listaConfig)
+        componentesModificados, numComponentesModificados = calculoComponentesAnaliseModificada(listaConfig, tipoSimulacao)
         gm, i = calculoMatrizes(listaConfig, numeroDeNos, tipoSimulacao, numComponentesModificados, componentesModificados)
 
         tensoesNodais = np.linalg.solve(gm, i)
@@ -180,4 +199,4 @@ def main(arqNetlist, tipoSimulacao, nosDesejados, parametrosSimulacao = []):
     return tensoesNodaisDesejadas
 
 if __name__ == '__main__':
-    listConfig('netlistAC1.txt')
+    print(main('netlistDC5.txt', 'DC', [2], []))
