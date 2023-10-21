@@ -120,10 +120,21 @@ def calculoMatrizes(listaConfig, numeroDeNos, tipoAnalise, numComponentesAnalise
 
             elif (componente[0][0] == 'L'):
                 # Como aqui temos um curto, coloquei um valor de condutância muito alto, para representar esse curto
-                gm[int(componente[1])][int(componente[1])] = gm[int(componente[1])][int(componente[1])] + 10000000000000000000000
-                gm[int(componente[1])][int(componente[2])] = gm[int(componente[1])][int(componente[2])] - 10000000000000000000000
-                gm[int(componente[2])][int(componente[1])] = gm[int(componente[2])][int(componente[1])] - 10000000000000000000000
-                gm[int(componente[2])][int(componente[2])] = gm[int(componente[2])][int(componente[2])] + 10000000000000000000000
+                gm[int(componente[1])][int(componente[1])] = gm[int(componente[1])][int(componente[1])] + 10000000000000000000000000000000000000000000000000000000000000000000000000
+                gm[int(componente[1])][int(componente[2])] = gm[int(componente[1])][int(componente[2])] - 10000000000000000000000000000000000000000000000000000000000000000000000000
+                gm[int(componente[2])][int(componente[1])] = gm[int(componente[2])][int(componente[1])] - 10000000000000000000000000000000000000000000000000000000000000000000000000
+                gm[int(componente[2])][int(componente[2])] = gm[int(componente[2])][int(componente[2])] + 10000000000000000000000000000000000000000000000000000000000000000000000000
+
+            elif (componente[0][0] == 'K'):
+                gm[int(componente[1])][int(componente[1])] = gm[int(componente[1])][int(componente[1])] + 10000000000000000000000000000000000000000000000000000000000000000000000000
+                gm[int(componente[1])][int(componente[2])] = gm[int(componente[1])][int(componente[2])] - 10000000000000000000000000000000000000000000000000000000000000000000000000
+                gm[int(componente[2])][int(componente[1])] = gm[int(componente[2])][int(componente[1])] - 10000000000000000000000000000000000000000000000000000000000000000000000000
+                gm[int(componente[2])][int(componente[2])] = gm[int(componente[2])][int(componente[2])] + 10000000000000000000000000000000000000000000000000000000000000000000000000
+                gm[int(componente[3])][int(componente[3])] = gm[int(componente[3])][int(componente[3])] + 10000000000000000000000000000000000000000000000000000000000000000000000000
+                gm[int(componente[3])][int(componente[4])] = gm[int(componente[3])][int(componente[4])] - 10000000000000000000000000000000000000000000000000000000000000000000000000
+                gm[int(componente[4])][int(componente[3])] = gm[int(componente[4])][int(componente[3])] - 10000000000000000000000000000000000000000000000000000000000000000000000000
+                gm[int(componente[4])][int(componente[4])] = gm[int(componente[4])][int(componente[4])] + 10000000000000000000000000000000000000000000000000000000000000000000000000
+
 
             elif (componente[0][0] == 'V'):
                 for componenteAnaliseModificada in componentesAnaliseModificada:
@@ -135,7 +146,8 @@ def calculoMatrizes(listaConfig, numeroDeNos, tipoAnalise, numComponentesAnalise
                 gm[numeroDeNos + aux][int(componente[1])] = gm[numeroDeNos + aux][int(componente[1])] - 1
                 gm[numeroDeNos + aux][int(componente[2])] = gm[numeroDeNos + aux][int(componente[2])] + 1
 
-                i[numeroDeNos + aux] = i[numeroDeNos + aux] - int(componente[4])
+                if (componente[3] != 'AC'):
+                    i[numeroDeNos + aux] = i[numeroDeNos + aux] - int(componente[4])
 
             elif (componente[0][0] == 'E'):
                 for componenteAnaliseModificada in componentesAnaliseModificada:
@@ -199,4 +211,9 @@ def main(arqNetlist, tipoSimulacao, nosDesejados, parametrosSimulacao = []):
     return tensoesNodaisDesejadas
 
 if __name__ == '__main__':
-    print(main('netlistDC5.txt', 'DC', [2], []))
+    print(main('netlistDC1.txt', 'DC', [2], []))
+    print(main('netlistDC2.txt', 'DC', [2,3,5,7,9,10], []))
+    print(main('netlistDC3.txt', 'DC', [1,2,3,4,5,6,7], []))
+    print(main('netlistDC4.txt', 'DC', [2], []))
+    print(main('netlistDC5.txt', 'DC', [2], []))    
+    print(main('netlistDC6.txt', 'DC', [3,4,5], []))
