@@ -28,9 +28,15 @@ def listConfig(nomeArq):
         listaConfig.append(auxList2)
         linhaNetlist = arqNetlist.readline()
     arqNetlist.close()
-    #print(listaConfig)
+    #print(listaConfig[4:])
 
-    return listaConfig
+    # Para esse segundo trabalho, eu começo a contar apenas da 5 linha pois para os arquivos DC 
+    # as primeias linhas dos arquivos possui as instruções para a chamada da função e o que deve retornar
+    if (nomeArq[7] == 'D'):
+        return listaConfig[4:]
+    
+    else:
+        return listaConfig
 
 # Funcao para fazer a conta de quantos nos tem no circuito
 def calculoNos(listaConfig):
@@ -171,4 +177,4 @@ def main(arqNetlist, tipoSimulacao, nosDesejados, parametrosSimulacao = []):
     return tensoesNodaisDesejadas
 
 if __name__ == '__main__':
-    print(main('netlistDC2 - Copia.txt', 'DC', [2,3,5,7,9,10], []))
+    listConfig('netlistAC1.txt')
