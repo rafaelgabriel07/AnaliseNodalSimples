@@ -88,12 +88,13 @@ def calculoComponentesAnaliseModificada(listaConfig, tipoAnalise):
 # Funcao para montar a matriz de condutancia e a matriz resultado
 def calculoMatrizes(listaConfig, numeroDeNos, tipoAnalise, numComponentesAnaliseModificada, componentesAnaliseModificada, omega = 0):
 
-    # Criando as matrizes com base no numero de nos do circuito
-    gm = np.zeros([numeroDeNos + numComponentesAnaliseModificada, numeroDeNos + numComponentesAnaliseModificada])
-    i = np.zeros(numeroDeNos + numComponentesAnaliseModificada)
-
     # For para identificar o componente e montar a matriz com base no seu valor
     if (tipoAnalise == 'DC'):
+
+        # Criando as matrizes com base no numero de nos do circuito
+        gm = np.zeros([numeroDeNos + numComponentesAnaliseModificada, numeroDeNos + numComponentesAnaliseModificada])
+        i = np.zeros(numeroDeNos + numComponentesAnaliseModificada)
+
         # Obs: nao temos a estampa para capacitor aqui pois ele representa, em DC, um circuito aberto, logo nao precisamos adicionar nada
         for componente in listaConfig:
 
@@ -198,6 +199,11 @@ def calculoMatrizes(listaConfig, numeroDeNos, tipoAnalise, numComponentesAnalise
                 gm[numeroDeNos + aux][int(componente[4])] = gm[numeroDeNos + aux][int(componente[4])] + 1
 
     else:
+
+        # Criando as matrizes com base no numero de nos do circuito
+        gm = np.zeros(([numeroDeNos + numComponentesAnaliseModificada, numeroDeNos + numComponentesAnaliseModificada]), dtype = 'complex_')
+        i = np.zeros((numeroDeNos + numComponentesAnaliseModificada), dtype = 'complex_')
+
         for componente in listaConfig:
 
             if (componente[0][0] == 'R'):
@@ -320,9 +326,9 @@ def main(arqNetlist, tipoSimulacao, nosDesejados, parametrosSimulacao = []):
     
     listaConfig = listConfig(arqNetlist)
     numeroDeNos = calculoNos(listaConfig)
+    componentesModificados, numComponentesModificados = calculoComponentesAnaliseModificada(listaConfig, tipoSimulacao)
     
     if (tipoSimulacao == 'DC'):
-        componentesModificados, numComponentesModificados = calculoComponentesAnaliseModificada(listaConfig, tipoSimulacao)
         gm, i = calculoMatrizes(listaConfig, numeroDeNos, tipoSimulacao, numComponentesModificados, componentesModificados)
 
         tensoesNodais = np.linalg.solve(gm, i)
@@ -334,23 +340,26 @@ def main(arqNetlist, tipoSimulacao, nosDesejados, parametrosSimulacao = []):
         return tensoesNodaisDesejadas
 
     else:
-        freqs = np.logspace(parametrosSimulacao[0], parametrosSimulacao[1], parametrosSimulacao[2])
+        freqs = np.logspace(np.log10(parametrosSimulacao[0]), np.log10(parametrosSimulacao[1]), parametrosSimulacao[2])
         omegas = 2*np.pi*freqs
         modulos = np.zeros(freqs.shape)
         fases = np.zeros(freqs.shape)
 
+        for indice in range(len(freqs)):
+            gm, i = gm, i = calculoMatrizes(listaConfig, numeroDeNos, tipoSimulacao, numComponentesModificados, componentesModificados, omegas[indice])
+            tensoesNodais = np.linalg.solve(gm, i)
 
+            modulos[indice] = 20*np.log10(np.abs(tensoesNodais))
+            fases[indice] = np.degrees(np.angle(tensoesNodais))
 
+        # Plotagem do gráfico
+        fig,ax1 = pyplot.subplots()
+        ax1.semilogx(freqs,modulos, '')
+        ax2 = ax1.twinx()
+        ax2.semilogx(freqs,fases,'r--')
+        pyplot.show()
 
-
-
-            
-    return tensoesNodaisDesejadas
+        return 0 
 
 if __name__ == '__main__':
-    print(main('netlistDC1.txt', 'DC', [2], []))
-    print(main('netlistDC2.txt', 'DC', [2,3,5,7,9,10], []))
-    print(main('netlistDC3.txt', 'DC', [1,2,3,4,5,6,7], []))
-    print(main('netlistDC4.txt', 'DC', [2], []))
-    print(main('netlistDC5.txt', 'DC', [2], []))    
-    print(main('netlistDC6.txt', 'DC', [3,4,5], []))
+    main('netlistAC1.txt','AC',[1], [0.01, 100, 100])
