@@ -356,14 +356,31 @@ def main(arqNetlist, tipoSimulacao, nosDesejados, parametrosSimulacao = []):
                 modulos[indice][i] = 20*np.log10(np.abs(tensoesNodais[i]))
                 fases[indice][i] = np.degrees(np.angle(tensoesNodais[i]))
 
-        # Plotagem do gráfico
-        #fig,ax1 = pyplot.subplots()
-        #ax1.semilogx(freqs,modulos, '')
-        #ax2 = ax1.twinx()
-        #ax2.semilogx(freqs,fases,'r--')
-        #pyplot.show()
+        # To fazendo a transposta para ficar no formato Tensao x Frequencia
+        modulos = modulos.transpose()
+        fases = fases.transpose()
 
-        return 0 
+        auxModulo = []
+        auxFase = []
+        modulosDesejados = []
+        fasesDesejadas = []
+        for noDesejado in nosDesejados:
+            for indice in range(len(freqs)):
+                auxModulo.append(modulos[noDesejado - 1][indice])
+                auxFase.append(fases[noDesejado - 1][indice])
+            modulosDesejados.append(auxModulo)
+            fasesDesejadas.append(auxFase)
+            auxModulo = []
+            auxFase = []
+            
+        # Plotagem do gráfico
+        fig,ax1 = pyplot.subplots()
+        ax1.semilogx(freqs,modulosDesejados[0], '')
+        ax2 = ax1.twinx()
+        ax2.semilogx(freqs,fasesDesejadas[0],'r--')
+        pyplot.show()
+
+        return freqs, modulosDesejados, fasesDesejadas
 
 if __name__ == '__main__':
-    main('netlistAC1.txt','AC',[1], [0.01, 100, 100])
+    main('netlistAC3.txt','AC',[2], [0.01, 100, 100])
