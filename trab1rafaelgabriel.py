@@ -62,15 +62,13 @@ def calculoComponentesAnaliseModificada(listaConfig, tipoAnalise):
     numComponentesAnaliseModificada = 0
 
     # Separei nesse if por que para a analise DC, nos podemos considerar o capacitor como um circuito aberto
-    # e o indutor como um curto, nao precisamos tratar eles como componentes diferente.
-    # o transformador nada mais é do que dois curtos
     if (tipoAnalise == 'DC'):
         for componente in listaConfig:
-            if (componente[0][0] == 'F' or componente[0][0] == 'E' or componente[0][0] == 'V'):
+            if (componente[0][0] == 'L' or componente[0][0] == 'F' or componente[0][0] == 'E' or componente[0][0] == 'V'):
                 componentesAnaliseModificada.append([componente[0], numComponentesAnaliseModificada])
                 numComponentesAnaliseModificada += 1
 
-            elif (componente[0][0] == 'H'):
+            elif (componente[0][0] == 'H' or componente[0][0] == 'K'):
                 componentesAnaliseModificada.append([componente[0], numComponentesAnaliseModificada, numComponentesAnaliseModificada + 1])
                 numComponentesAnaliseModificada += 2
     
@@ -119,22 +117,35 @@ def calculoMatrizes(listaConfig, numeroDeNos, tipoAnalise, numComponentesAnalise
                 gm[int(componente[2])][int(componente[2])] = gm[int(componente[2])][int(componente[2])] + 1/float(componente[3])
 
             elif (componente[0][0] == 'L'):
-                # Como aqui temos um curto, coloquei um valor de condutância muito alto, para representar esse curto
-                gm[int(componente[1])][int(componente[1])] = gm[int(componente[1])][int(componente[1])] + 10000000000000000000000000000000000000000000000000000000000000000000000000
-                gm[int(componente[1])][int(componente[2])] = gm[int(componente[1])][int(componente[2])] - 10000000000000000000000000000000000000000000000000000000000000000000000000
-                gm[int(componente[2])][int(componente[1])] = gm[int(componente[2])][int(componente[1])] - 10000000000000000000000000000000000000000000000000000000000000000000000000
-                gm[int(componente[2])][int(componente[2])] = gm[int(componente[2])][int(componente[2])] + 10000000000000000000000000000000000000000000000000000000000000000000000000
-
+                # Aqui o que fiz foi utilizar a mesma estampa da fonte de tensão, mas com uma fonte de tensão de 0V, representando assim um curto
+                for componenteAnaliseModificada in componentesAnaliseModificada:
+                    if (componente[0] == componenteAnaliseModificada[0]):
+                        aux = componenteAnaliseModificada[1]
+                
+                gm[int(componente[1])][numeroDeNos + aux] = gm[int(componente[1])][numeroDeNos + aux] + 1
+                gm[int(componente[2])][numeroDeNos + aux] = gm[int(componente[2])][numeroDeNos + aux] - 1
+                gm[numeroDeNos + aux][int(componente[1])] = gm[numeroDeNos + aux][int(componente[1])] - 1
+                gm[numeroDeNos + aux][int(componente[2])] = gm[numeroDeNos + aux][int(componente[2])] + 1
+                i[numeroDeNos + aux] = i[numeroDeNos + aux] - 0
+                
             elif (componente[0][0] == 'K'):
-                gm[int(componente[1])][int(componente[1])] = gm[int(componente[1])][int(componente[1])] + 10000000000000000000000000000000000000000000000000000000000000000000000000
-                gm[int(componente[1])][int(componente[2])] = gm[int(componente[1])][int(componente[2])] - 10000000000000000000000000000000000000000000000000000000000000000000000000
-                gm[int(componente[2])][int(componente[1])] = gm[int(componente[2])][int(componente[1])] - 10000000000000000000000000000000000000000000000000000000000000000000000000
-                gm[int(componente[2])][int(componente[2])] = gm[int(componente[2])][int(componente[2])] + 10000000000000000000000000000000000000000000000000000000000000000000000000
-                gm[int(componente[3])][int(componente[3])] = gm[int(componente[3])][int(componente[3])] + 10000000000000000000000000000000000000000000000000000000000000000000000000
-                gm[int(componente[3])][int(componente[4])] = gm[int(componente[3])][int(componente[4])] - 10000000000000000000000000000000000000000000000000000000000000000000000000
-                gm[int(componente[4])][int(componente[3])] = gm[int(componente[4])][int(componente[3])] - 10000000000000000000000000000000000000000000000000000000000000000000000000
-                gm[int(componente[4])][int(componente[4])] = gm[int(componente[4])][int(componente[4])] + 10000000000000000000000000000000000000000000000000000000000000000000000000
+                # Aqui eu fiz a mesma coisa que fiz para o indutor, coloquei duas fontes de tensão de 0V
+                for componenteAnaliseModificada in componentesAnaliseModificada:
+                    if (componente[0] == componenteAnaliseModificada[0]):
+                        aux = componenteAnaliseModificada[1]
+                        aux2 = componenteAnaliseModificada[2]
 
+                gm[int(componente[1])][numeroDeNos + aux] = gm[int(componente[1])][numeroDeNos + aux] + 1
+                gm[int(componente[2])][numeroDeNos + aux] = gm[int(componente[2])][numeroDeNos + aux] - 1
+                gm[numeroDeNos + aux][int(componente[1])] = gm[numeroDeNos + aux][int(componente[1])] - 1
+                gm[numeroDeNos + aux][int(componente[2])] = gm[numeroDeNos + aux][int(componente[2])] + 1
+                i[numeroDeNos + aux] = i[numeroDeNos + aux] - 0
+
+                gm[int(componente[3])][numeroDeNos + aux2] = gm[int(componente[1])][numeroDeNos + aux2] + 1
+                gm[int(componente[4])][numeroDeNos + aux2] = gm[int(componente[2])][numeroDeNos + aux2] - 1
+                gm[numeroDeNos + aux2][int(componente[3])] = gm[numeroDeNos + aux2][int(componente[3])] - 1
+                gm[numeroDeNos + aux2][int(componente[4])] = gm[numeroDeNos + aux2][int(componente[4])] + 1
+                i[numeroDeNos + aux2] = i[numeroDeNos + aux2] - 0
 
             elif (componente[0][0] == 'V'):
                 for componenteAnaliseModificada in componentesAnaliseModificada:
