@@ -232,9 +232,9 @@ def calculoMatrizes(listaConfig, numeroDeNos, tipoAnalise, numComponentesAnalise
 
             elif (componente[0][0] == 'K'):
 
-                gama11 = float(componente[6])/(float(componente[5])*float(componente[6])-(float(componente[7]))^2)
-                gama22 = float(componente[5])/(float(componente[5])*float(componente[6])-(float(componente[7]))^2)
-                gama12_21 = -float(componente[7])/(float(componente[5])*float(componente[6])-(float(componente[7]))^2)
+                gama11 = float(componente[6])/(float(componente[5])*float(componente[6])-(float(componente[7]))**2)
+                gama22 = float(componente[5])/(float(componente[5])*float(componente[6])-(float(componente[7]))**2)
+                gama12_21 = -float(componente[7])/(float(componente[5])*float(componente[6])-(float(componente[7]))**2)
 
                 gm[int(componente[1])][int(componente[1])] = gm[int(componente[1])][int(componente[1])] + gama11/(1j*omega)
                 gm[int(componente[1])][int(componente[2])] = gm[int(componente[1])][int(componente[2])] - gama11/(1j*omega)
@@ -374,13 +374,20 @@ def main(arqNetlist, tipoSimulacao, nosDesejados, parametrosSimulacao = []):
             auxFase = []
             
         # Plotagem do gráfico
-        fig,ax1 = pyplot.subplots()
-        ax1.semilogx(freqs,modulosDesejados[0], '')
-        ax2 = ax1.twinx()
-        ax2.semilogx(freqs,fasesDesejadas[0],'r--')
-        pyplot.show()
+        for indice in range(len(modulosDesejados)):
+            pyplot.title('Módulo [dB] / Fase [Graus]')
+            pyplot.subplot(1,2,1)
+            pyplot.plot(freqs,modulosDesejados[indice])
+            pyplot.xscale("log")
+
+            pyplot.title('Módulo [dB] / Fase [Graus]')
+            pyplot.subplot(1,2,2)
+            pyplot.plot(freqs,fasesDesejadas[indice])
+            pyplot.xscale("log")
+            pyplot.show()
+
 
         return freqs, modulosDesejados, fasesDesejadas
 
 if __name__ == '__main__':
-    main('netlistAC3.txt','AC',[2], [0.01, 100, 100])
+    main('netlistAC4.txt','AC',[2,3], [0.01, 500, 1000])
