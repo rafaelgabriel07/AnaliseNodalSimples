@@ -342,22 +342,26 @@ def main(arqNetlist, tipoSimulacao, nosDesejados, parametrosSimulacao = []):
     else:
         freqs = np.logspace(np.log10(parametrosSimulacao[0]), np.log10(parametrosSimulacao[1]), parametrosSimulacao[2])
         omegas = 2*np.pi*freqs
-        modulos = np.zeros(freqs.shape)
-        fases = np.zeros(freqs.shape)
+        modulos = np.zeros([len(freqs), numeroDeNos - 1])
+        fases = np.zeros([len(freqs), numeroDeNos - 1])
 
         for indice in range(len(freqs)):
             gm, i = gm, i = calculoMatrizes(listaConfig, numeroDeNos, tipoSimulacao, numComponentesModificados, componentesModificados, omegas[indice])
             tensoesNodais = np.linalg.solve(gm, i)
 
-            modulos[indice] = 20*np.log10(np.abs(tensoesNodais))
-            fases[indice] = np.degrees(np.angle(tensoesNodais))
+            # Tirando as correntes que encontramos devida a analise modificada
+            tensoesNodais = tensoesNodais[:numeroDeNos - 1]
+
+            for i in range(len(tensoesNodais)):
+                modulos[indice][i] = 20*np.log10(np.abs(tensoesNodais[i]))
+                fases[indice][i] = np.degrees(np.angle(tensoesNodais[i]))
 
         # Plotagem do gráfico
-        fig,ax1 = pyplot.subplots()
-        ax1.semilogx(freqs,modulos, '')
-        ax2 = ax1.twinx()
-        ax2.semilogx(freqs,fases,'r--')
-        pyplot.show()
+        #fig,ax1 = pyplot.subplots()
+        #ax1.semilogx(freqs,modulos, '')
+        #ax2 = ax1.twinx()
+        #ax2.semilogx(freqs,fases,'r--')
+        #pyplot.show()
 
         return 0 
 
