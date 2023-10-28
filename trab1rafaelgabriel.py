@@ -2,6 +2,7 @@
 # DRE: 121087555
 
 import numpy as np
+from matplotlib import pyplot
 
 # A funcao abaixo foi criado com para eu dispor os dados da netlist de uma maneira que acho mais simples de trabalhar
 def listConfig(nomeArq):
@@ -74,13 +75,9 @@ def calculoComponentesAnaliseModificada(listaConfig, tipoAnalise):
     
     else:
         for componente in listaConfig:
-            if (componente[0][0] == 'L' or componente[0][0] == 'C' or componente[0][0] == 'F' or componente[0][0] == 'E' or componente[0][0] == 'V'):
+            if (componente[0][0] == 'F' or componente[0][0] == 'E' or componente[0][0] == 'V'):
                 componentesAnaliseModificada.append([componente[0], numComponentesAnaliseModificada])
                 numComponentesAnaliseModificada += 1
-
-            elif (componente[0][0] == 'K'):
-                componentesAnaliseModificada.append([componente[0], numComponentesAnaliseModificada, numComponentesAnaliseModificada + 1])
-                numComponentesAnaliseModificada += 2
 
             elif (componente[0][0] == 'H'):
                 componentesAnaliseModificada.append([componente[0], numComponentesAnaliseModificada, numComponentesAnaliseModificada + 1])
@@ -89,7 +86,7 @@ def calculoComponentesAnaliseModificada(listaConfig, tipoAnalise):
     return componentesAnaliseModificada, numComponentesAnaliseModificada
 
 # Funcao para montar a matriz de condutancia e a matriz resultado
-def calculoMatrizes(listaConfig, numeroDeNos, tipoAnalise, numComponentesAnaliseModificada, componentesAnaliseModificada):
+def calculoMatrizes(listaConfig, numeroDeNos, tipoAnalise, numComponentesAnaliseModificada, componentesAnaliseModificada, omega = 0):
 
     # Criando as matrizes com base no numero de nos do circuito
     gm = np.zeros([numeroDeNos + numComponentesAnaliseModificada, numeroDeNos + numComponentesAnaliseModificada])
@@ -200,6 +197,119 @@ def calculoMatrizes(listaConfig, numeroDeNos, tipoAnalise, numComponentesAnalise
                 gm[numeroDeNos + aux][int(componente[3])] = gm[numeroDeNos + aux][int(componente[3])] - 1
                 gm[numeroDeNos + aux][int(componente[4])] = gm[numeroDeNos + aux][int(componente[4])] + 1
 
+    else:
+        for componente in listaConfig:
+
+            if (componente[0][0] == 'R'):
+                gm[int(componente[1])][int(componente[1])] = gm[int(componente[1])][int(componente[1])] + 1/float(componente[3])
+                gm[int(componente[1])][int(componente[2])] = gm[int(componente[1])][int(componente[2])] - 1/float(componente[3])
+                gm[int(componente[2])][int(componente[1])] = gm[int(componente[2])][int(componente[1])] - 1/float(componente[3])
+                gm[int(componente[2])][int(componente[2])] = gm[int(componente[2])][int(componente[2])] + 1/float(componente[3])
+
+            elif (componente[0][0] == 'G'):
+                gm[int(componente[1])][int(componente[3])] = gm[int(componente[1])][int(componente[3])] + float(componente[5])
+                gm[int(componente[1])][int(componente[4])] = gm[int(componente[1])][int(componente[4])] - float(componente[5])
+                gm[int(componente[2])][int(componente[3])] = gm[int(componente[2])][int(componente[3])] - float(componente[5])
+                gm[int(componente[2])][int(componente[4])] = gm[int(componente[2])][int(componente[4])] + float(componente[5])
+
+            elif (componente[0][0] == 'L'):
+                gm[int(componente[1])][int(componente[1])] = gm[int(componente[1])][int(componente[1])] + 1/(1j*omega*float(componente[3]))
+                gm[int(componente[1])][int(componente[2])] = gm[int(componente[1])][int(componente[2])] - 1/(1j*omega*float(componente[3]))
+                gm[int(componente[2])][int(componente[1])] = gm[int(componente[2])][int(componente[1])] - 1/(1j*omega*float(componente[3]))
+                gm[int(componente[2])][int(componente[2])] = gm[int(componente[2])][int(componente[2])] + 1/(1j*omega*float(componente[3]))
+
+            elif (componente[0][0] == 'C'):
+                gm[int(componente[1])][int(componente[1])] = gm[int(componente[1])][int(componente[1])] + (1j*omega*float(componente[3]))
+                gm[int(componente[1])][int(componente[2])] = gm[int(componente[1])][int(componente[2])] - (1j*omega*float(componente[3]))
+                gm[int(componente[2])][int(componente[1])] = gm[int(componente[2])][int(componente[1])] - (1j*omega*float(componente[3]))
+                gm[int(componente[2])][int(componente[2])] = gm[int(componente[2])][int(componente[2])] + (1j*omega*float(componente[3]))
+
+            elif (componente[0][0] == 'K'):
+
+                gama11 = float(componente[6])/(float(componente[5])*float(componente[6])-(float(componente[7]))^2)
+                gama22 = float(componente[5])/(float(componente[5])*float(componente[6])-(float(componente[7]))^2)
+                gama12_21 = -float(componente[7])/(float(componente[5])*float(componente[6])-(float(componente[7]))^2)
+
+                gm[int(componente[1])][int(componente[1])] = gm[int(componente[1])][int(componente[1])] + gama11/(1j*omega)
+                gm[int(componente[1])][int(componente[2])] = gm[int(componente[1])][int(componente[2])] - gama11/(1j*omega)
+                gm[int(componente[1])][int(componente[3])] = gm[int(componente[1])][int(componente[3])] + gama12_21/(1j*omega)
+                gm[int(componente[1])][int(componente[4])] = gm[int(componente[1])][int(componente[4])] - gama12_21/(1j*omega)
+                gm[int(componente[2])][int(componente[1])] = gm[int(componente[2])][int(componente[1])] - gama11/(1j*omega)
+                gm[int(componente[2])][int(componente[2])] = gm[int(componente[2])][int(componente[2])] + gama11/(1j*omega)
+                gm[int(componente[2])][int(componente[3])] = gm[int(componente[2])][int(componente[3])] - gama12_21/(1j*omega)
+                gm[int(componente[2])][int(componente[4])] = gm[int(componente[2])][int(componente[4])] + gama12_21/(1j*omega)
+                gm[int(componente[3])][int(componente[1])] = gm[int(componente[3])][int(componente[1])] + gama12_21/(1j*omega)
+                gm[int(componente[3])][int(componente[2])] = gm[int(componente[3])][int(componente[2])] - gama12_21/(1j*omega)
+                gm[int(componente[3])][int(componente[3])] = gm[int(componente[3])][int(componente[3])] + gama22/(1j*omega)
+                gm[int(componente[3])][int(componente[4])] = gm[int(componente[3])][int(componente[4])] - gama22/(1j*omega)
+                gm[int(componente[4])][int(componente[1])] = gm[int(componente[4])][int(componente[1])] - gama12_21/(1j*omega)
+                gm[int(componente[4])][int(componente[2])] = gm[int(componente[4])][int(componente[2])] + gama12_21/(1j*omega)
+                gm[int(componente[4])][int(componente[3])] = gm[int(componente[4])][int(componente[3])] - gama22/(1j*omega)
+                gm[int(componente[4])][int(componente[4])] = gm[int(componente[4])][int(componente[4])] + gama22/(1j*omega)
+
+            elif (componente[0][0] == 'F'):
+                for componenteAnaliseModificada in componentesAnaliseModificada:
+                    if (componente[0] == componenteAnaliseModificada[0]):
+                        aux = componenteAnaliseModificada[1]
+                
+                gm[int(componente[1])][numeroDeNos + aux] = gm[int(componente[1])][numeroDeNos + aux] + int(componente[5])
+                gm[int(componente[2])][numeroDeNos + aux] = gm[int(componente[2])][numeroDeNos + aux] - int(componente[5])
+                gm[int(componente[3])][numeroDeNos + aux] = gm[int(componente[3])][numeroDeNos + aux] + 1
+                gm[int(componente[4])][numeroDeNos + aux] = gm[int(componente[4])][numeroDeNos + aux] - 1
+                gm[numeroDeNos + aux][int(componente[3])] = gm[numeroDeNos + aux][int(componente[3])] - 1
+                gm[numeroDeNos + aux][int(componente[4])] = gm[numeroDeNos + aux][int(componente[4])] + 1
+
+            elif (componente[0][0] == 'E'):
+                for componenteAnaliseModificada in componentesAnaliseModificada:
+                    if (componente[0] == componenteAnaliseModificada[0]):
+                        aux = componenteAnaliseModificada[1]
+
+                gm[int(componente[1])][numeroDeNos + aux] = gm[int(componente[1])][numeroDeNos + aux] + 1
+                gm[int(componente[2])][numeroDeNos + aux] = gm[int(componente[2])][numeroDeNos + aux] - 1
+                gm[numeroDeNos + aux][int(componente[1])] = gm[numeroDeNos + aux][int(componente[1])] - 1
+                gm[numeroDeNos + aux][int(componente[2])] = gm[numeroDeNos + aux][int(componente[2])] + 1
+                gm[numeroDeNos + aux][int(componente[3])] = gm[numeroDeNos + aux][int(componente[3])] + float(componente[5])
+                gm[numeroDeNos + aux][int(componente[4])] = gm[numeroDeNos + aux][int(componente[4])] - float(componente[5])
+
+            elif (componente[0][0] == 'H'):
+                for componenteAnaliseModificada in componentesAnaliseModificada:
+                    if (componente[0] == componenteAnaliseModificada[0]):
+                        aux = componenteAnaliseModificada[1]
+                        aux2 = componenteAnaliseModificada[2]
+                
+                gm[int(componente[1])][numeroDeNos + aux2] = gm[int(componente[1])][numeroDeNos + aux2] + 1
+                gm[int(componente[2])][numeroDeNos + aux2] = gm[int(componente[2])][numeroDeNos + aux2] - 1
+                gm[int(componente[3])][numeroDeNos + aux] = gm[int(componente[3])][numeroDeNos + aux] + 1
+                gm[int(componente[4])][numeroDeNos + aux] = gm[int(componente[4])][numeroDeNos + aux] - 1
+                gm[numeroDeNos + aux][int(componente[3])] = gm[numeroDeNos + aux][int(componente[3])] - 1
+                gm[numeroDeNos + aux][int(componente[4])] = gm[numeroDeNos + aux][int(componente[4])] + 1
+                gm[numeroDeNos + aux2][int(componente[1])] = gm[numeroDeNos + aux2][int(componente[1])] - 1
+                gm[numeroDeNos + aux2][int(componente[2])] = gm[numeroDeNos + aux2][int(componente[2])] + 1
+                gm[numeroDeNos + aux2][numeroDeNos + aux] = gm[numeroDeNos + aux2][numeroDeNos + aux] + float(componente[5])
+
+            elif (componente[0][0] == 'I' and componente[3] == 'AC'):
+                amp = float(componente[4])
+                fase = float(componente[5])
+
+                i[int(componente[1])] = i[int(componente[1])] - amp*np.exp(1j*fase)
+                i[int(componente[2])] = i[int(componente[2])] + amp*np.exp(1j*fase)
+
+            elif (componente[0][0] == 'V'):
+                for componenteAnaliseModificada in componentesAnaliseModificada:
+                    if (componente[0] == componenteAnaliseModificada[0]):
+                        aux = componenteAnaliseModificada[1]
+                
+                gm[int(componente[1])][numeroDeNos + aux] = gm[int(componente[1])][numeroDeNos + aux] + 1
+                gm[int(componente[2])][numeroDeNos + aux] = gm[int(componente[2])][numeroDeNos + aux] - 1
+                gm[numeroDeNos + aux][int(componente[1])] = gm[numeroDeNos + aux][int(componente[1])] - 1
+                gm[numeroDeNos + aux][int(componente[2])] = gm[numeroDeNos + aux][int(componente[2])] + 1
+
+                if (componente[3] == 'AC'):
+                    amp = float(componente[4])
+                    fase = float(componente[5])
+
+                    i[numeroDeNos + aux] = i[numeroDeNos + aux] - amp*np.exp(1j*fase)
+
     gm = gm[1:,1:]
     i = i[1:]
 
@@ -207,9 +317,11 @@ def calculoMatrizes(listaConfig, numeroDeNos, tipoAnalise, numComponentesAnalise
 
 # Funcao main, que, atraves das outras funcoes, fara a conta para encontrar as tensoes nodais
 def main(arqNetlist, tipoSimulacao, nosDesejados, parametrosSimulacao = []):
+    
+    listaConfig = listConfig(arqNetlist)
+    numeroDeNos = calculoNos(listaConfig)
+    
     if (tipoSimulacao == 'DC'):
-        listaConfig = listConfig(arqNetlist)
-        numeroDeNos = calculoNos(listaConfig)
         componentesModificados, numComponentesModificados = calculoComponentesAnaliseModificada(listaConfig, tipoSimulacao)
         gm, i = calculoMatrizes(listaConfig, numeroDeNos, tipoSimulacao, numComponentesModificados, componentesModificados)
 
@@ -218,6 +330,20 @@ def main(arqNetlist, tipoSimulacao, nosDesejados, parametrosSimulacao = []):
 
         for no in nosDesejados:
             tensoesNodaisDesejadas.append(tensoesNodais[no - 1])
+
+        return tensoesNodaisDesejadas
+
+    else:
+        freqs = np.logspace(parametrosSimulacao[0], parametrosSimulacao[1], parametrosSimulacao[2])
+        omegas = 2*np.pi*freqs
+        modulos = np.zeros(freqs.shape)
+        fases = np.zeros(freqs.shape)
+
+
+
+
+
+
             
     return tensoesNodaisDesejadas
 
