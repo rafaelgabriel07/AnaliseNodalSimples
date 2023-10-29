@@ -375,17 +375,18 @@ def main(arqNetlist, tipoSimulacao, nosDesejados, parametrosSimulacao = []):
             
         # Plotagem do gráfico
         for indice in range(len(modulosDesejados)):
-            pyplot.title('Módulo [dB] / Fase [Graus]')
-            pyplot.subplot(1,2,1)
             pyplot.plot(freqs,modulosDesejados[indice])
             pyplot.xscale("log")
+        pyplot.title(arqNetlist[0].upper() + arqNetlist[1:7] + ' ' + arqNetlist[7:10])
+        pyplot.ylabel('Ganho [dB]')
+        pyplot.show()
 
-            pyplot.title('Módulo [dB] / Fase [Graus]')
-            pyplot.subplot(1,2,2)
+        for indice in range(len(fasesDesejadas)):
             pyplot.plot(freqs,fasesDesejadas[indice])
             pyplot.xscale("log")
-            pyplot.show()
-
+        pyplot.title(arqNetlist[0].upper() + arqNetlist[1:7] + ' ' + arqNetlist[7:10])
+        pyplot.ylabel('Fase [Graus]')
+        pyplot.show()
 
         return freqs, modulosDesejados, fasesDesejadas
 
