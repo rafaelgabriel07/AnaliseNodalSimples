@@ -377,7 +377,7 @@ def main(arqNetlist, tipoSimulacao, nosDesejados, parametrosSimulacao = []):
         for indice in range(len(modulosDesejados)):
             pyplot.plot(freqs,modulosDesejados[indice])
             pyplot.xscale("log")
-        pyplot.title(arqNetlist[0].upper() + arqNetlist[1:7] + ' ' + arqNetlist[7:10])
+        pyplot.title(arqNetlist[0].upper() + arqNetlist[1:7] + ' ' + arqNetlist[7:len(arqNetlist) - 4])
         pyplot.ylabel('Magnetude [dB]')
         pyplot.xlabel('Freq [Hz]')
         pyplot.show()
@@ -385,7 +385,7 @@ def main(arqNetlist, tipoSimulacao, nosDesejados, parametrosSimulacao = []):
         for indice in range(len(fasesDesejadas)):
             pyplot.plot(freqs,fasesDesejadas[indice])
             pyplot.xscale("log")
-        pyplot.title(arqNetlist[0].upper() + arqNetlist[1:7] + ' ' + arqNetlist[7:10])
+        pyplot.title(arqNetlist[0].upper() + arqNetlist[1:7] + ' ' + arqNetlist[7:len(arqNetlist) - 4])
         pyplot.ylabel('Fase [Graus]')
         pyplot.xlabel('Freq [Hz]')
         pyplot.show()
