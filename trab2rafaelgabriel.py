@@ -393,4 +393,22 @@ def main(arqNetlist, tipoSimulacao, nosDesejados, parametrosSimulacao = []):
         return freqs, modulosDesejados, fasesDesejadas
 
 if __name__ == '__main__':
-    main('netlistAC4.txt','AC',[2,3], [0.01, 500, 1000])
+    print('Testes DC:')
+    print(main('netlistDC1.txt', 'DC', [2], []))
+    print(main('netlistDC2.txt', 'DC', [2,3,5,7,9,10], []))
+    print(main('netlistDC3.txt', 'DC', [1,2,3,4,5,6,7], []))
+    print(main('netlistDC4.txt', 'DC', [2], []))
+    print(main('netlistDC5.txt', 'DC', [2], []))
+    print(main('netlistDC6.txt', 'DC', [3,4,5], []))
+    input()
+    print('Testes AC:')
+    print(main('netlistAC1.txt','AC',[1], [0.01, 100, 100]))
+    print(main('netlistAC2.txt','AC',[1], [0.01, 200, 100]))
+    print(main('netlistAC3.txt','AC',[2], [0.01, 100, 100]))
+    print(main('netlistAC4.txt','AC',[2,3], [0.01, 500, 1000]))
+    print(main('netlistAC5.txt','AC',[3], [0.01, 1000, 1000]))
+    print(main('netlistAC6.txt','AC',[2,5], [0.01, 2e3, 1000]))
+    print(main('netlistAC7.txt','AC',[2,7], [0.01, 100, 1000]))
+    print(main('netlistAC8.txt','AC',[4], [100, 100e3, 100]))
+    print(main('netlistAC9.txt','AC',[2,3,4,5,6], [0.01, 100, 1000]))
+    print(main('netlistAC10.txt','AC',[4,5], [0.01, 500, 1000]))
