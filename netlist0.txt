@@ -1,8 +1,0 @@
-* Exemplo basico de netlist.
-* Netlist de um circuito com dois resistores
-* e uma fonte de corrente constante.
-* Valor de retorno esperado: array([10, 8]) ou array([[10], [8]])
-
-I1 0 1 DC 2
-R1 1 2 1
-R2 2 0 4

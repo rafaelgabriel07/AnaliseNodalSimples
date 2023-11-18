@@ -1,0 +1,9 @@
+* Chamada da funcao main:
+* main('teste6.txt', 'DC', [1,2,3], [1e-14, [0,5,1,-5]])
+* Resultado esperado: [ 5,  4.2781936, -5]
+
+V1 1 0 DC 5
+D1 1 2 50e-18 22.5e-3
+R1 2 0 1e3
+V2 0 3 DC 5
+D2 3 2 50e-18 22.5e-3
