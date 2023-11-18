@@ -196,12 +196,12 @@ def calculoMatrizes(listaConfig, numeroDeNos, tipoAnalise, numComponentesAnalise
             elif (componente[0][0] == 'D'):
                 e10 = parametrosAnalise[int(componente[1])]
                 e20 = parametrosAnalise[int(componente[2])]
-                g0 = float(componente[3])*np.e**((e10 - e20)/float(componente[4]))/float(componente[4])
+                g0 = (float(componente[3])*np.e**((e10 - e20)/float(componente[4])))/float(componente[4])
                 i0 = float(componente[3])*(np.e**((e10 - e20)/float(componente[4])) - 1) - g0*(e10 - e20)
-                fx[int(componente[1])][int(componente[1])] = fx[int(componente[1])][int(componente[1])] + 1/g0
-                fx[int(componente[1])][int(componente[2])] = fx[int(componente[1])][int(componente[2])] - 1/g0
-                fx[int(componente[2])][int(componente[1])] = fx[int(componente[2])][int(componente[1])] - 1/g0
-                fx[int(componente[2])][int(componente[2])] = fx[int(componente[2])][int(componente[2])] + 1/g0
+                fx[int(componente[1])][int(componente[1])] = fx[int(componente[1])][int(componente[1])] + g0
+                fx[int(componente[1])][int(componente[2])] = fx[int(componente[1])][int(componente[2])] - g0
+                fx[int(componente[2])][int(componente[1])] = fx[int(componente[2])][int(componente[1])] - g0
+                fx[int(componente[2])][int(componente[2])] = fx[int(componente[2])][int(componente[2])] + g0
 
                 i[int(componente[1])] = i[int(componente[1])] - i0
                 i[int(componente[2])] = i[int(componente[2])] + i0
@@ -338,49 +338,60 @@ def main(arqNetlist, tipoSimulacao, nosDesejados, parametrosSimulacao):
     componentesModificados, numComponentesModificados = calculoComponentesAnaliseModificada(listaConfig, tipoSimulacao)
     
     if (tipoSimulacao == 'DC'):
-        fx, i = calculoMatrizes(listaConfig, numeroDeNos, tipoSimulacao, numComponentesModificados, componentesModificados, parametrosSimulacao[1])
 
-        tensoesNodais = np.linalg.solve(fx, i)
+        tol = float(parametrosSimulacao[0])
+        aux = 0
+
+        while aux < 100:
+            fx, i = calculoMatrizes(listaConfig, numeroDeNos, tipoSimulacao, numComponentesModificados, componentesModificados, parametrosSimulacao[1])
+            tensoesNodais = np.linalg.solve(fx, i)
+            
+            if (np.abs(tensoesNodais[0] - parametrosSimulacao[1][1]) <= tol and np.abs(tensoesNodais[1] - parametrosSimulacao[1][2]) <= tol):
+                break
+
+            parametrosSimulacao[1][1] = tensoesNodais[0]
+            parametrosSimulacao[1][2] = tensoesNodais[1]
+            aux += 1
+
         tensoesNodaisDesejadas = []
-
         for no in nosDesejados:
             tensoesNodaisDesejadas.append(tensoesNodais[no - 1])
 
         return tensoesNodaisDesejadas
 
-    #else:
-    #    freqs = np.logspace(np.log10(parametrosSimulacao[0]), np.log10(parametrosSimulacao[1]), parametrosSimulacao[2])
-    #    omegas = 2*np.pi*freqs
-    #    modulos = np.zeros([len(freqs), numeroDeNos - 1])
-    #    fases = np.zeros([len(freqs), numeroDeNos - 1])
-#
-    #    for indice in range(len(freqs)):
-    #        fx, i = calculoMatrizes(listaConfig, numeroDeNos, tipoSimulacao, numComponentesModificados, componentesModificados, omegas[indice])
-    #        tensoesNodais = np.linalg.solve(fx, i)
-#
-    #        # Tirando as correntes que encontramos devida a analise modificada
-    #        tensoesNodais = tensoesNodais[:numeroDeNos - 1]
-#
-    #        for i in range(len(tensoesNodais)):
-    #            modulos[indice][i] = 20*np.log10(np.abs(tensoesNodais[i]))
-    #            fases[indice][i] = np.degrees(np.angle(tensoesNodais[i]))
-#
-    #    # To fazendo a transposta para ficar no formato Tensao x Frequencia
-    #    modulos = modulos.transpose()
-    #    fases = fases.transpose()
-#
-    #    auxModulo = []
-    #    auxFase = []
-    #    modulosDesejados = []
-    #    fasesDesejadas = []
-    #    for noDesejado in nosDesejados:
-    #        for indice in range(len(freqs)):
-    #            auxModulo.append(modulos[noDesejado - 1][indice])
-    #            auxFase.append(fases[noDesejado - 1][indice])
-    #        modulosDesejados.append(auxModulo)
-    #        fasesDesejadas.append(auxFase)
-    #        auxModulo = []
-    #        auxFase = []
+    else:
+        freqs = np.logspace(np.log10(parametrosSimulacao[0]), np.log10(parametrosSimulacao[1]), parametrosSimulacao[2])
+        omegas = 2*np.pi*freqs
+        modulos = np.zeros([len(freqs), numeroDeNos - 1])
+        fases = np.zeros([len(freqs), numeroDeNos - 1])
+
+        for indice in range(len(freqs)):
+            fx, i = calculoMatrizes(listaConfig, numeroDeNos, tipoSimulacao, numComponentesModificados, componentesModificados, omegas[indice])
+            tensoesNodais = np.linalg.solve(fx, i)
+
+            # Tirando as correntes que encontramos devida a analise modificada
+            tensoesNodais = tensoesNodais[:numeroDeNos - 1]
+
+            for i in range(len(tensoesNodais)):
+                modulos[indice][i] = 20*np.log10(np.abs(tensoesNodais[i]))
+                fases[indice][i] = np.degrees(np.angle(tensoesNodais[i]))
+
+        # To fazendo a transposta para ficar no formato Tensao x Frequencia
+        modulos = modulos.transpose()
+        fases = fases.transpose()
+
+        auxModulo = []
+        auxFase = []
+        modulosDesejados = []
+        fasesDesejadas = []
+        for noDesejado in nosDesejados:
+            for indice in range(len(freqs)):
+                auxModulo.append(modulos[noDesejado - 1][indice])
+                auxFase.append(fases[noDesejado - 1][indice])
+            modulosDesejados.append(auxModulo)
+            fasesDesejadas.append(auxFase)
+            auxModulo = []
+            auxFase = []
             
         # Plotagem do gráfico
         for indice in range(len(modulosDesejados)):
