@@ -341,47 +341,42 @@ def main(arqNetlist, tipoSimulacao, nosDesejados, parametrosSimulacao):
 
         tol = float(parametrosSimulacao[0])
         aux = 0
-        no1MenorTol = False
-        no2MenorTol = False
+        numComponentesNaoLineares = 0
+
+        # Fazendo a contagem de componentes nao lineares
+        for componente in listaConfig:
+            if (componente[0][0] == 'D'):
+                numComponentesNaoLineares += 1
+
+        listaNosComponentesNaoLineares = np.zeros(2*numComponentesNaoLineares)
+        indice = 0
+        for componente in listaConfig:
+            if (componente[0][0] == 'D'):
+                listaNosComponentesNaoLineares[indice] = int(componente[1])
+                listaNosComponentesNaoLineares[indice + 1] = int(componente[2])
+                indice += 2
 
         while aux < 1000:
+            menorTol = True
             fx, i = calculoMatrizes(listaConfig, numeroDeNos, tipoSimulacao, numComponentesModificados, componentesModificados, parametrosSimulacao[1])
             tensoesNodais = np.linalg.solve(fx, i)
     
-            # Verificando as tolerancias e alterando os valores dos parametros para componentes nao lineares
-            for componente in listaConfig:
-                if (componente[0][0] == 'D'):
-                    no1 = int(componente[1])
-                    no2 = int(componente[2])
+            # Verificando as tolerancias
+            for no in listaNosComponentesNaoLineares:
+                no = int(no)
+                if (parametrosSimulacao[1][no] != 0 and np.abs(tensoesNodais[no - 1] - parametrosSimulacao[1][no]) > tol):
+                    menorTol = False
+                    break
 
-                    if (parametrosSimulacao[1][no1] != 0 and np.abs(tensoesNodais[no1 - 1] - parametrosSimulacao[1][no1]) <= tol):
-                        no1MenorTol= True
-
-                    if (parametrosSimulacao[1][no2] != 0 and np.abs(tensoesNodais[no2 - 1] - parametrosSimulacao[1][no2]) <= tol):
-                        no2MenorTol= True
-
-                    # if's para nao acabar trocando a tensao do gnd
-                    if (parametrosSimulacao[1][no1] != 0):
-                        parametrosSimulacao[1][no1] = tensoesNodais[no1 - 1]
-
-                    # Esse else é para o caso o nó seja GND, ele sempre estara dentro da tolerância
-                    # então já coloco como se fosse menor que a tolerância
-                    else:
-                        no1MenorTol = True
-
-                    if (parametrosSimulacao[1][no2] != 0):
-                        parametrosSimulacao[1][no2] = tensoesNodais[no2 - 1]
-
-                    else:
-                        no2MenorTol= True
-
-            if (no1MenorTol and no2MenorTol):
+            if (menorTol):
                 break
 
-            else:
-                no1MenorTol = False
-                no2MenorTol = False
-            
+            # Alterando os parâmetros
+            for no in listaNosComponentesNaoLineares:
+                no = int(no)
+                if (parametrosSimulacao[1][no] != 0):
+                    parametrosSimulacao[1][no] = tensoesNodais[no - 1]
+
             aux += 1
 
         print(aux)
