@@ -341,22 +341,53 @@ def main(arqNetlist, tipoSimulacao, nosDesejados, parametrosSimulacao):
 
         tol = float(parametrosSimulacao[0])
         aux = 0
+        no1MenorTol = False
+        no2MenorTol = False
 
-        while aux < 100:
+        while aux < 1000:
             fx, i = calculoMatrizes(listaConfig, numeroDeNos, tipoSimulacao, numComponentesModificados, componentesModificados, parametrosSimulacao[1])
             tensoesNodais = np.linalg.solve(fx, i)
-            
-            if (np.abs(tensoesNodais[0] - parametrosSimulacao[1][1]) <= tol and np.abs(tensoesNodais[1] - parametrosSimulacao[1][2]) <= tol):
+    
+            # Verificando as tolerancias e alterando os valores dos parametros para componentes nao lineares
+            for componente in listaConfig:
+                if (componente[0][0] == 'D'):
+                    no1 = int(componente[1])
+                    no2 = int(componente[2])
+
+                    if (parametrosSimulacao[1][no1] != 0 and np.abs(tensoesNodais[no1 - 1] - parametrosSimulacao[1][no1]) <= tol):
+                        no1MenorTol= True
+
+                    if (parametrosSimulacao[1][no2] != 0 and np.abs(tensoesNodais[no2 - 1] - parametrosSimulacao[1][no2]) <= tol):
+                        no2MenorTol= True
+
+                    # if's para nao acabar trocando a tensao do gnd
+                    if (parametrosSimulacao[1][no1] != 0):
+                        parametrosSimulacao[1][no1] = tensoesNodais[no1 - 1]
+
+                    # Esse else é para o caso o nó seja GND, ele sempre estara dentro da tolerância
+                    # então já coloco como se fosse menor que a tolerância
+                    else:
+                        no1MenorTol = True
+
+                    if (parametrosSimulacao[1][no2] != 0):
+                        parametrosSimulacao[1][no2] = tensoesNodais[no2 - 1]
+
+                    else:
+                        no2MenorTol= True
+
+            if (no1MenorTol and no2MenorTol):
                 break
 
-            parametrosSimulacao[1][1] = tensoesNodais[0]
-            parametrosSimulacao[1][2] = tensoesNodais[1]
+            else:
+                no1MenorTol = False
+                no2MenorTol = False
+            
             aux += 1
 
+        print(aux)
         tensoesNodaisDesejadas = []
         for no in nosDesejados:
             tensoesNodaisDesejadas.append(tensoesNodais[no - 1])
-
         return tensoesNodaisDesejadas
 
     else:
@@ -414,3 +445,9 @@ def main(arqNetlist, tipoSimulacao, nosDesejados, parametrosSimulacao):
 
 if __name__ == '__main__':
     print(main('teste1.txt', 'DC', [1,2], [1e-10, [0,0.1,0.1]]))
+    print(main('teste2.txt', 'DC', [2], [1e-14, [0,3,3]]))
+    print(main('teste3.txt', 'DC', [2], [1e-12, [0,0,2]]))
+    print(main('teste4.txt', 'DC', [2], [1e-12, [0,0,2]]))
+    print(main('teste5.txt', 'DC', [1,2], [1e-12, [0,1,2]]))
+    print(main('teste6.txt', 'DC', [1,2,3], [1e-14, [0,5,1,-5]]))
+    print(main('teste7.txt', 'DC', [1,2,3], [1e-14, [0,-5,4,5]]))
