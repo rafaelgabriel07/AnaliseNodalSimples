@@ -81,13 +81,13 @@ def calculoComponentesAnaliseModificada(listaConfig, tipoAnalise):
     return componentesAnaliseModificada, numComponentesAnaliseModificada
 
 # Funcao para montar a matriz de condutancia e a matriz resultado
-def calculoMatrizes(listaConfig, numeroDeNos, tipoAnalise, numComponentesAnaliseModificada, componentesAnaliseModificada, omega = 0):
+def calculoMatrizes(listaConfig, numeroDeNos, tipoAnalise, numComponentesAnaliseModificada, componentesAnaliseModificada, parametrosAnalise, omega = 0):
 
     # For para identificar o componente e montar a matriz com base no seu valor
     if (tipoAnalise == 'DC'):
 
         # Criando as matrizes com base no numero de nos do circuito
-        gm = np.zeros([numeroDeNos + numComponentesAnaliseModificada, numeroDeNos + numComponentesAnaliseModificada])
+        fx = np.zeros([numeroDeNos + numComponentesAnaliseModificada, numeroDeNos + numComponentesAnaliseModificada])
         i = np.zeros(numeroDeNos + numComponentesAnaliseModificada)
 
         # Obs: nao temos a estampa para capacitor aqui pois ele representa, em DC, um circuito aberto, logo nao precisamos adicionar nada
@@ -98,16 +98,16 @@ def calculoMatrizes(listaConfig, numeroDeNos, tipoAnalise, numComponentesAnalise
                 i[int(componente[2])] = i[int(componente[2])] + float(componente[4])
 
             elif (componente[0][0] == 'G'):
-                gm[int(componente[1])][int(componente[3])] = gm[int(componente[1])][int(componente[3])] + float(componente[5])
-                gm[int(componente[1])][int(componente[4])] = gm[int(componente[1])][int(componente[4])] - float(componente[5])
-                gm[int(componente[2])][int(componente[3])] = gm[int(componente[2])][int(componente[3])] - float(componente[5])
-                gm[int(componente[2])][int(componente[4])] = gm[int(componente[2])][int(componente[4])] + float(componente[5])
+                fx[int(componente[1])][int(componente[3])] = fx[int(componente[1])][int(componente[3])] + float(componente[5])
+                fx[int(componente[1])][int(componente[4])] = fx[int(componente[1])][int(componente[4])] - float(componente[5])
+                fx[int(componente[2])][int(componente[3])] = fx[int(componente[2])][int(componente[3])] - float(componente[5])
+                fx[int(componente[2])][int(componente[4])] = fx[int(componente[2])][int(componente[4])] + float(componente[5])
 
             elif (componente[0][0] == 'R'):
-                gm[int(componente[1])][int(componente[1])] = gm[int(componente[1])][int(componente[1])] + 1/float(componente[3])
-                gm[int(componente[1])][int(componente[2])] = gm[int(componente[1])][int(componente[2])] - 1/float(componente[3])
-                gm[int(componente[2])][int(componente[1])] = gm[int(componente[2])][int(componente[1])] - 1/float(componente[3])
-                gm[int(componente[2])][int(componente[2])] = gm[int(componente[2])][int(componente[2])] + 1/float(componente[3])
+                fx[int(componente[1])][int(componente[1])] = fx[int(componente[1])][int(componente[1])] + 1/float(componente[3])
+                fx[int(componente[1])][int(componente[2])] = fx[int(componente[1])][int(componente[2])] - 1/float(componente[3])
+                fx[int(componente[2])][int(componente[1])] = fx[int(componente[2])][int(componente[1])] - 1/float(componente[3])
+                fx[int(componente[2])][int(componente[2])] = fx[int(componente[2])][int(componente[2])] + 1/float(componente[3])
 
             elif (componente[0][0] == 'L'):
                 # Aqui o que fiz foi utilizar a mesma estampa da fonte de tensão, mas com uma fonte de tensão de 0V, representando assim um curto
@@ -115,10 +115,10 @@ def calculoMatrizes(listaConfig, numeroDeNos, tipoAnalise, numComponentesAnalise
                     if (componente[0] == componenteAnaliseModificada[0]):
                         aux = componenteAnaliseModificada[1]
                 
-                gm[int(componente[1])][numeroDeNos + aux] = gm[int(componente[1])][numeroDeNos + aux] + 1
-                gm[int(componente[2])][numeroDeNos + aux] = gm[int(componente[2])][numeroDeNos + aux] - 1
-                gm[numeroDeNos + aux][int(componente[1])] = gm[numeroDeNos + aux][int(componente[1])] - 1
-                gm[numeroDeNos + aux][int(componente[2])] = gm[numeroDeNos + aux][int(componente[2])] + 1
+                fx[int(componente[1])][numeroDeNos + aux] = fx[int(componente[1])][numeroDeNos + aux] + 1
+                fx[int(componente[2])][numeroDeNos + aux] = fx[int(componente[2])][numeroDeNos + aux] - 1
+                fx[numeroDeNos + aux][int(componente[1])] = fx[numeroDeNos + aux][int(componente[1])] - 1
+                fx[numeroDeNos + aux][int(componente[2])] = fx[numeroDeNos + aux][int(componente[2])] + 1
                 i[numeroDeNos + aux] = i[numeroDeNos + aux] - 0
                 
             elif (componente[0][0] == 'K'):
@@ -128,16 +128,16 @@ def calculoMatrizes(listaConfig, numeroDeNos, tipoAnalise, numComponentesAnalise
                         aux = componenteAnaliseModificada[1]
                         aux2 = componenteAnaliseModificada[2]
 
-                gm[int(componente[1])][numeroDeNos + aux] = gm[int(componente[1])][numeroDeNos + aux] + 1
-                gm[int(componente[2])][numeroDeNos + aux] = gm[int(componente[2])][numeroDeNos + aux] - 1
-                gm[numeroDeNos + aux][int(componente[1])] = gm[numeroDeNos + aux][int(componente[1])] - 1
-                gm[numeroDeNos + aux][int(componente[2])] = gm[numeroDeNos + aux][int(componente[2])] + 1
+                fx[int(componente[1])][numeroDeNos + aux] = fx[int(componente[1])][numeroDeNos + aux] + 1
+                fx[int(componente[2])][numeroDeNos + aux] = fx[int(componente[2])][numeroDeNos + aux] - 1
+                fx[numeroDeNos + aux][int(componente[1])] = fx[numeroDeNos + aux][int(componente[1])] - 1
+                fx[numeroDeNos + aux][int(componente[2])] = fx[numeroDeNos + aux][int(componente[2])] + 1
                 i[numeroDeNos + aux] = i[numeroDeNos + aux] - 0
 
-                gm[int(componente[3])][numeroDeNos + aux2] = gm[int(componente[1])][numeroDeNos + aux2] + 1
-                gm[int(componente[4])][numeroDeNos + aux2] = gm[int(componente[2])][numeroDeNos + aux2] - 1
-                gm[numeroDeNos + aux2][int(componente[3])] = gm[numeroDeNos + aux2][int(componente[3])] - 1
-                gm[numeroDeNos + aux2][int(componente[4])] = gm[numeroDeNos + aux2][int(componente[4])] + 1
+                fx[int(componente[3])][numeroDeNos + aux2] = fx[int(componente[1])][numeroDeNos + aux2] + 1
+                fx[int(componente[4])][numeroDeNos + aux2] = fx[int(componente[2])][numeroDeNos + aux2] - 1
+                fx[numeroDeNos + aux2][int(componente[3])] = fx[numeroDeNos + aux2][int(componente[3])] - 1
+                fx[numeroDeNos + aux2][int(componente[4])] = fx[numeroDeNos + aux2][int(componente[4])] + 1
                 i[numeroDeNos + aux2] = i[numeroDeNos + aux2] - 0
 
             elif (componente[0][0] == 'V'):
@@ -145,10 +145,10 @@ def calculoMatrizes(listaConfig, numeroDeNos, tipoAnalise, numComponentesAnalise
                     if (componente[0] == componenteAnaliseModificada[0]):
                         aux = componenteAnaliseModificada[1]
                 
-                gm[int(componente[1])][numeroDeNos + aux] = gm[int(componente[1])][numeroDeNos + aux] + 1
-                gm[int(componente[2])][numeroDeNos + aux] = gm[int(componente[2])][numeroDeNos + aux] - 1
-                gm[numeroDeNos + aux][int(componente[1])] = gm[numeroDeNos + aux][int(componente[1])] - 1
-                gm[numeroDeNos + aux][int(componente[2])] = gm[numeroDeNos + aux][int(componente[2])] + 1
+                fx[int(componente[1])][numeroDeNos + aux] = fx[int(componente[1])][numeroDeNos + aux] + 1
+                fx[int(componente[2])][numeroDeNos + aux] = fx[int(componente[2])][numeroDeNos + aux] - 1
+                fx[numeroDeNos + aux][int(componente[1])] = fx[numeroDeNos + aux][int(componente[1])] - 1
+                fx[numeroDeNos + aux][int(componente[2])] = fx[numeroDeNos + aux][int(componente[2])] + 1
 
                 if (componente[3] != 'AC'):
                     i[numeroDeNos + aux] = i[numeroDeNos + aux] - int(componente[4])
@@ -158,12 +158,12 @@ def calculoMatrizes(listaConfig, numeroDeNos, tipoAnalise, numComponentesAnalise
                     if (componente[0] == componenteAnaliseModificada[0]):
                         aux = componenteAnaliseModificada[1]
 
-                gm[int(componente[1])][numeroDeNos + aux] = gm[int(componente[1])][numeroDeNos + aux] + 1
-                gm[int(componente[2])][numeroDeNos + aux] = gm[int(componente[2])][numeroDeNos + aux] - 1
-                gm[numeroDeNos + aux][int(componente[1])] = gm[numeroDeNos + aux][int(componente[1])] - 1
-                gm[numeroDeNos + aux][int(componente[2])] = gm[numeroDeNos + aux][int(componente[2])] + 1
-                gm[numeroDeNos + aux][int(componente[3])] = gm[numeroDeNos + aux][int(componente[3])] + float(componente[5])
-                gm[numeroDeNos + aux][int(componente[4])] = gm[numeroDeNos + aux][int(componente[4])] - float(componente[5])
+                fx[int(componente[1])][numeroDeNos + aux] = fx[int(componente[1])][numeroDeNos + aux] + 1
+                fx[int(componente[2])][numeroDeNos + aux] = fx[int(componente[2])][numeroDeNos + aux] - 1
+                fx[numeroDeNos + aux][int(componente[1])] = fx[numeroDeNos + aux][int(componente[1])] - 1
+                fx[numeroDeNos + aux][int(componente[2])] = fx[numeroDeNos + aux][int(componente[2])] + 1
+                fx[numeroDeNos + aux][int(componente[3])] = fx[numeroDeNos + aux][int(componente[3])] + float(componente[5])
+                fx[numeroDeNos + aux][int(componente[4])] = fx[numeroDeNos + aux][int(componente[4])] - float(componente[5])
 
             elif (componente[0][0] == 'H'):
                 for componenteAnaliseModificada in componentesAnaliseModificada:
@@ -171,59 +171,73 @@ def calculoMatrizes(listaConfig, numeroDeNos, tipoAnalise, numComponentesAnalise
                         aux = componenteAnaliseModificada[1]
                         aux2 = componenteAnaliseModificada[2]
                 
-                gm[int(componente[1])][numeroDeNos + aux2] = gm[int(componente[1])][numeroDeNos + aux2] + 1
-                gm[int(componente[2])][numeroDeNos + aux2] = gm[int(componente[2])][numeroDeNos + aux2] - 1
-                gm[int(componente[3])][numeroDeNos + aux] = gm[int(componente[3])][numeroDeNos + aux] + 1
-                gm[int(componente[4])][numeroDeNos + aux] = gm[int(componente[4])][numeroDeNos + aux] - 1
-                gm[numeroDeNos + aux][int(componente[3])] = gm[numeroDeNos + aux][int(componente[3])] - 1
-                gm[numeroDeNos + aux][int(componente[4])] = gm[numeroDeNos + aux][int(componente[4])] + 1
-                gm[numeroDeNos + aux2][int(componente[1])] = gm[numeroDeNos + aux2][int(componente[1])] - 1
-                gm[numeroDeNos + aux2][int(componente[2])] = gm[numeroDeNos + aux2][int(componente[2])] + 1
-                gm[numeroDeNos + aux2][numeroDeNos + aux] = gm[numeroDeNos + aux2][numeroDeNos + aux] + float(componente[5])
+                fx[int(componente[1])][numeroDeNos + aux2] = fx[int(componente[1])][numeroDeNos + aux2] + 1
+                fx[int(componente[2])][numeroDeNos + aux2] = fx[int(componente[2])][numeroDeNos + aux2] - 1
+                fx[int(componente[3])][numeroDeNos + aux] = fx[int(componente[3])][numeroDeNos + aux] + 1
+                fx[int(componente[4])][numeroDeNos + aux] = fx[int(componente[4])][numeroDeNos + aux] - 1
+                fx[numeroDeNos + aux][int(componente[3])] = fx[numeroDeNos + aux][int(componente[3])] - 1
+                fx[numeroDeNos + aux][int(componente[4])] = fx[numeroDeNos + aux][int(componente[4])] + 1
+                fx[numeroDeNos + aux2][int(componente[1])] = fx[numeroDeNos + aux2][int(componente[1])] - 1
+                fx[numeroDeNos + aux2][int(componente[2])] = fx[numeroDeNos + aux2][int(componente[2])] + 1
+                fx[numeroDeNos + aux2][numeroDeNos + aux] = fx[numeroDeNos + aux2][numeroDeNos + aux] + float(componente[5])
 
             elif (componente[0][0] == 'F'):
                 for componenteAnaliseModificada in componentesAnaliseModificada:
                     if (componente[0] == componenteAnaliseModificada[0]):
                         aux = componenteAnaliseModificada[1]
                 
-                gm[int(componente[1])][numeroDeNos + aux] = gm[int(componente[1])][numeroDeNos + aux] + int(componente[5])
-                gm[int(componente[2])][numeroDeNos + aux] = gm[int(componente[2])][numeroDeNos + aux] - int(componente[5])
-                gm[int(componente[3])][numeroDeNos + aux] = gm[int(componente[3])][numeroDeNos + aux] + 1
-                gm[int(componente[4])][numeroDeNos + aux] = gm[int(componente[4])][numeroDeNos + aux] - 1
-                gm[numeroDeNos + aux][int(componente[3])] = gm[numeroDeNos + aux][int(componente[3])] - 1
-                gm[numeroDeNos + aux][int(componente[4])] = gm[numeroDeNos + aux][int(componente[4])] + 1
+                fx[int(componente[1])][numeroDeNos + aux] = fx[int(componente[1])][numeroDeNos + aux] + int(componente[5])
+                fx[int(componente[2])][numeroDeNos + aux] = fx[int(componente[2])][numeroDeNos + aux] - int(componente[5])
+                fx[int(componente[3])][numeroDeNos + aux] = fx[int(componente[3])][numeroDeNos + aux] + 1
+                fx[int(componente[4])][numeroDeNos + aux] = fx[int(componente[4])][numeroDeNos + aux] - 1
+                fx[numeroDeNos + aux][int(componente[3])] = fx[numeroDeNos + aux][int(componente[3])] - 1
+                fx[numeroDeNos + aux][int(componente[4])] = fx[numeroDeNos + aux][int(componente[4])] + 1
+
+            elif (componente[0][0] == 'D'):
+                e10 = parametrosAnalise[int(componente[1])]
+                e20 = parametrosAnalise[int(componente[2])]
+                g0 = float(componente[3])*np.e**((e10 - e20)/float(componente[4]))/float(componente[4])
+                i0 = float(componente[3])*(np.e**((e10 - e20)/float(componente[4])) - 1) - g0*(e10 - e20)
+                fx[int(componente[1])][int(componente[1])] = fx[int(componente[1])][int(componente[1])] + 1/g0
+                fx[int(componente[1])][int(componente[2])] = fx[int(componente[1])][int(componente[2])] - 1/g0
+                fx[int(componente[2])][int(componente[1])] = fx[int(componente[2])][int(componente[1])] - 1/g0
+                fx[int(componente[2])][int(componente[2])] = fx[int(componente[2])][int(componente[2])] + 1/g0
+
+                i[int(componente[1])] = i[int(componente[1])] - i0
+                i[int(componente[2])] = i[int(componente[2])] + i0
+
 
     else:
 
         # Criando as matrizes com base no numero de nos do circuito
-        gm = np.zeros(([numeroDeNos + numComponentesAnaliseModificada, numeroDeNos + numComponentesAnaliseModificada]), dtype = 'complex_')
+        fx = np.zeros(([numeroDeNos + numComponentesAnaliseModificada, numeroDeNos + numComponentesAnaliseModificada]), dtype = 'complex_')
         i = np.zeros((numeroDeNos + numComponentesAnaliseModificada), dtype = 'complex_')
 
         for componente in listaConfig:
 
             if (componente[0][0] == 'R'):
-                gm[int(componente[1])][int(componente[1])] = gm[int(componente[1])][int(componente[1])] + 1/float(componente[3])
-                gm[int(componente[1])][int(componente[2])] = gm[int(componente[1])][int(componente[2])] - 1/float(componente[3])
-                gm[int(componente[2])][int(componente[1])] = gm[int(componente[2])][int(componente[1])] - 1/float(componente[3])
-                gm[int(componente[2])][int(componente[2])] = gm[int(componente[2])][int(componente[2])] + 1/float(componente[3])
+                fx[int(componente[1])][int(componente[1])] = fx[int(componente[1])][int(componente[1])] + 1/float(componente[3])
+                fx[int(componente[1])][int(componente[2])] = fx[int(componente[1])][int(componente[2])] - 1/float(componente[3])
+                fx[int(componente[2])][int(componente[1])] = fx[int(componente[2])][int(componente[1])] - 1/float(componente[3])
+                fx[int(componente[2])][int(componente[2])] = fx[int(componente[2])][int(componente[2])] + 1/float(componente[3])
 
             elif (componente[0][0] == 'G'):
-                gm[int(componente[1])][int(componente[3])] = gm[int(componente[1])][int(componente[3])] + float(componente[5])
-                gm[int(componente[1])][int(componente[4])] = gm[int(componente[1])][int(componente[4])] - float(componente[5])
-                gm[int(componente[2])][int(componente[3])] = gm[int(componente[2])][int(componente[3])] - float(componente[5])
-                gm[int(componente[2])][int(componente[4])] = gm[int(componente[2])][int(componente[4])] + float(componente[5])
+                fx[int(componente[1])][int(componente[3])] = fx[int(componente[1])][int(componente[3])] + float(componente[5])
+                fx[int(componente[1])][int(componente[4])] = fx[int(componente[1])][int(componente[4])] - float(componente[5])
+                fx[int(componente[2])][int(componente[3])] = fx[int(componente[2])][int(componente[3])] - float(componente[5])
+                fx[int(componente[2])][int(componente[4])] = fx[int(componente[2])][int(componente[4])] + float(componente[5])
 
             elif (componente[0][0] == 'L'):
-                gm[int(componente[1])][int(componente[1])] = gm[int(componente[1])][int(componente[1])] + 1/(1j*omega*float(componente[3]))
-                gm[int(componente[1])][int(componente[2])] = gm[int(componente[1])][int(componente[2])] - 1/(1j*omega*float(componente[3]))
-                gm[int(componente[2])][int(componente[1])] = gm[int(componente[2])][int(componente[1])] - 1/(1j*omega*float(componente[3]))
-                gm[int(componente[2])][int(componente[2])] = gm[int(componente[2])][int(componente[2])] + 1/(1j*omega*float(componente[3]))
+                fx[int(componente[1])][int(componente[1])] = fx[int(componente[1])][int(componente[1])] + 1/(1j*omega*float(componente[3]))
+                fx[int(componente[1])][int(componente[2])] = fx[int(componente[1])][int(componente[2])] - 1/(1j*omega*float(componente[3]))
+                fx[int(componente[2])][int(componente[1])] = fx[int(componente[2])][int(componente[1])] - 1/(1j*omega*float(componente[3]))
+                fx[int(componente[2])][int(componente[2])] = fx[int(componente[2])][int(componente[2])] + 1/(1j*omega*float(componente[3]))
 
             elif (componente[0][0] == 'C'):
-                gm[int(componente[1])][int(componente[1])] = gm[int(componente[1])][int(componente[1])] + (1j*omega*float(componente[3]))
-                gm[int(componente[1])][int(componente[2])] = gm[int(componente[1])][int(componente[2])] - (1j*omega*float(componente[3]))
-                gm[int(componente[2])][int(componente[1])] = gm[int(componente[2])][int(componente[1])] - (1j*omega*float(componente[3]))
-                gm[int(componente[2])][int(componente[2])] = gm[int(componente[2])][int(componente[2])] + (1j*omega*float(componente[3]))
+                fx[int(componente[1])][int(componente[1])] = fx[int(componente[1])][int(componente[1])] + (1j*omega*float(componente[3]))
+                fx[int(componente[1])][int(componente[2])] = fx[int(componente[1])][int(componente[2])] - (1j*omega*float(componente[3]))
+                fx[int(componente[2])][int(componente[1])] = fx[int(componente[2])][int(componente[1])] - (1j*omega*float(componente[3]))
+                fx[int(componente[2])][int(componente[2])] = fx[int(componente[2])][int(componente[2])] + (1j*omega*float(componente[3]))
 
             elif (componente[0][0] == 'K'):
 
@@ -231,46 +245,46 @@ def calculoMatrizes(listaConfig, numeroDeNos, tipoAnalise, numComponentesAnalise
                 gama22 = float(componente[5])/(float(componente[5])*float(componente[6])-(float(componente[7]))**2)
                 gama12_21 = -float(componente[7])/(float(componente[5])*float(componente[6])-(float(componente[7]))**2)
 
-                gm[int(componente[1])][int(componente[1])] = gm[int(componente[1])][int(componente[1])] + gama11/(1j*omega)
-                gm[int(componente[1])][int(componente[2])] = gm[int(componente[1])][int(componente[2])] - gama11/(1j*omega)
-                gm[int(componente[1])][int(componente[3])] = gm[int(componente[1])][int(componente[3])] + gama12_21/(1j*omega)
-                gm[int(componente[1])][int(componente[4])] = gm[int(componente[1])][int(componente[4])] - gama12_21/(1j*omega)
-                gm[int(componente[2])][int(componente[1])] = gm[int(componente[2])][int(componente[1])] - gama11/(1j*omega)
-                gm[int(componente[2])][int(componente[2])] = gm[int(componente[2])][int(componente[2])] + gama11/(1j*omega)
-                gm[int(componente[2])][int(componente[3])] = gm[int(componente[2])][int(componente[3])] - gama12_21/(1j*omega)
-                gm[int(componente[2])][int(componente[4])] = gm[int(componente[2])][int(componente[4])] + gama12_21/(1j*omega)
-                gm[int(componente[3])][int(componente[1])] = gm[int(componente[3])][int(componente[1])] + gama12_21/(1j*omega)
-                gm[int(componente[3])][int(componente[2])] = gm[int(componente[3])][int(componente[2])] - gama12_21/(1j*omega)
-                gm[int(componente[3])][int(componente[3])] = gm[int(componente[3])][int(componente[3])] + gama22/(1j*omega)
-                gm[int(componente[3])][int(componente[4])] = gm[int(componente[3])][int(componente[4])] - gama22/(1j*omega)
-                gm[int(componente[4])][int(componente[1])] = gm[int(componente[4])][int(componente[1])] - gama12_21/(1j*omega)
-                gm[int(componente[4])][int(componente[2])] = gm[int(componente[4])][int(componente[2])] + gama12_21/(1j*omega)
-                gm[int(componente[4])][int(componente[3])] = gm[int(componente[4])][int(componente[3])] - gama22/(1j*omega)
-                gm[int(componente[4])][int(componente[4])] = gm[int(componente[4])][int(componente[4])] + gama22/(1j*omega)
+                fx[int(componente[1])][int(componente[1])] = fx[int(componente[1])][int(componente[1])] + gama11/(1j*omega)
+                fx[int(componente[1])][int(componente[2])] = fx[int(componente[1])][int(componente[2])] - gama11/(1j*omega)
+                fx[int(componente[1])][int(componente[3])] = fx[int(componente[1])][int(componente[3])] + gama12_21/(1j*omega)
+                fx[int(componente[1])][int(componente[4])] = fx[int(componente[1])][int(componente[4])] - gama12_21/(1j*omega)
+                fx[int(componente[2])][int(componente[1])] = fx[int(componente[2])][int(componente[1])] - gama11/(1j*omega)
+                fx[int(componente[2])][int(componente[2])] = fx[int(componente[2])][int(componente[2])] + gama11/(1j*omega)
+                fx[int(componente[2])][int(componente[3])] = fx[int(componente[2])][int(componente[3])] - gama12_21/(1j*omega)
+                fx[int(componente[2])][int(componente[4])] = fx[int(componente[2])][int(componente[4])] + gama12_21/(1j*omega)
+                fx[int(componente[3])][int(componente[1])] = fx[int(componente[3])][int(componente[1])] + gama12_21/(1j*omega)
+                fx[int(componente[3])][int(componente[2])] = fx[int(componente[3])][int(componente[2])] - gama12_21/(1j*omega)
+                fx[int(componente[3])][int(componente[3])] = fx[int(componente[3])][int(componente[3])] + gama22/(1j*omega)
+                fx[int(componente[3])][int(componente[4])] = fx[int(componente[3])][int(componente[4])] - gama22/(1j*omega)
+                fx[int(componente[4])][int(componente[1])] = fx[int(componente[4])][int(componente[1])] - gama12_21/(1j*omega)
+                fx[int(componente[4])][int(componente[2])] = fx[int(componente[4])][int(componente[2])] + gama12_21/(1j*omega)
+                fx[int(componente[4])][int(componente[3])] = fx[int(componente[4])][int(componente[3])] - gama22/(1j*omega)
+                fx[int(componente[4])][int(componente[4])] = fx[int(componente[4])][int(componente[4])] + gama22/(1j*omega)
 
             elif (componente[0][0] == 'F'):
                 for componenteAnaliseModificada in componentesAnaliseModificada:
                     if (componente[0] == componenteAnaliseModificada[0]):
                         aux = componenteAnaliseModificada[1]
                 
-                gm[int(componente[1])][numeroDeNos + aux] = gm[int(componente[1])][numeroDeNos + aux] + int(componente[5])
-                gm[int(componente[2])][numeroDeNos + aux] = gm[int(componente[2])][numeroDeNos + aux] - int(componente[5])
-                gm[int(componente[3])][numeroDeNos + aux] = gm[int(componente[3])][numeroDeNos + aux] + 1
-                gm[int(componente[4])][numeroDeNos + aux] = gm[int(componente[4])][numeroDeNos + aux] - 1
-                gm[numeroDeNos + aux][int(componente[3])] = gm[numeroDeNos + aux][int(componente[3])] - 1
-                gm[numeroDeNos + aux][int(componente[4])] = gm[numeroDeNos + aux][int(componente[4])] + 1
+                fx[int(componente[1])][numeroDeNos + aux] = fx[int(componente[1])][numeroDeNos + aux] + int(componente[5])
+                fx[int(componente[2])][numeroDeNos + aux] = fx[int(componente[2])][numeroDeNos + aux] - int(componente[5])
+                fx[int(componente[3])][numeroDeNos + aux] = fx[int(componente[3])][numeroDeNos + aux] + 1
+                fx[int(componente[4])][numeroDeNos + aux] = fx[int(componente[4])][numeroDeNos + aux] - 1
+                fx[numeroDeNos + aux][int(componente[3])] = fx[numeroDeNos + aux][int(componente[3])] - 1
+                fx[numeroDeNos + aux][int(componente[4])] = fx[numeroDeNos + aux][int(componente[4])] + 1
 
             elif (componente[0][0] == 'E'):
                 for componenteAnaliseModificada in componentesAnaliseModificada:
                     if (componente[0] == componenteAnaliseModificada[0]):
                         aux = componenteAnaliseModificada[1]
 
-                gm[int(componente[1])][numeroDeNos + aux] = gm[int(componente[1])][numeroDeNos + aux] + 1
-                gm[int(componente[2])][numeroDeNos + aux] = gm[int(componente[2])][numeroDeNos + aux] - 1
-                gm[numeroDeNos + aux][int(componente[1])] = gm[numeroDeNos + aux][int(componente[1])] - 1
-                gm[numeroDeNos + aux][int(componente[2])] = gm[numeroDeNos + aux][int(componente[2])] + 1
-                gm[numeroDeNos + aux][int(componente[3])] = gm[numeroDeNos + aux][int(componente[3])] + float(componente[5])
-                gm[numeroDeNos + aux][int(componente[4])] = gm[numeroDeNos + aux][int(componente[4])] - float(componente[5])
+                fx[int(componente[1])][numeroDeNos + aux] = fx[int(componente[1])][numeroDeNos + aux] + 1
+                fx[int(componente[2])][numeroDeNos + aux] = fx[int(componente[2])][numeroDeNos + aux] - 1
+                fx[numeroDeNos + aux][int(componente[1])] = fx[numeroDeNos + aux][int(componente[1])] - 1
+                fx[numeroDeNos + aux][int(componente[2])] = fx[numeroDeNos + aux][int(componente[2])] + 1
+                fx[numeroDeNos + aux][int(componente[3])] = fx[numeroDeNos + aux][int(componente[3])] + float(componente[5])
+                fx[numeroDeNos + aux][int(componente[4])] = fx[numeroDeNos + aux][int(componente[4])] - float(componente[5])
 
             elif (componente[0][0] == 'H'):
                 for componenteAnaliseModificada in componentesAnaliseModificada:
@@ -278,15 +292,15 @@ def calculoMatrizes(listaConfig, numeroDeNos, tipoAnalise, numComponentesAnalise
                         aux = componenteAnaliseModificada[1]
                         aux2 = componenteAnaliseModificada[2]
                 
-                gm[int(componente[1])][numeroDeNos + aux2] = gm[int(componente[1])][numeroDeNos + aux2] + 1
-                gm[int(componente[2])][numeroDeNos + aux2] = gm[int(componente[2])][numeroDeNos + aux2] - 1
-                gm[int(componente[3])][numeroDeNos + aux] = gm[int(componente[3])][numeroDeNos + aux] + 1
-                gm[int(componente[4])][numeroDeNos + aux] = gm[int(componente[4])][numeroDeNos + aux] - 1
-                gm[numeroDeNos + aux][int(componente[3])] = gm[numeroDeNos + aux][int(componente[3])] - 1
-                gm[numeroDeNos + aux][int(componente[4])] = gm[numeroDeNos + aux][int(componente[4])] + 1
-                gm[numeroDeNos + aux2][int(componente[1])] = gm[numeroDeNos + aux2][int(componente[1])] - 1
-                gm[numeroDeNos + aux2][int(componente[2])] = gm[numeroDeNos + aux2][int(componente[2])] + 1
-                gm[numeroDeNos + aux2][numeroDeNos + aux] = gm[numeroDeNos + aux2][numeroDeNos + aux] + float(componente[5])
+                fx[int(componente[1])][numeroDeNos + aux2] = fx[int(componente[1])][numeroDeNos + aux2] + 1
+                fx[int(componente[2])][numeroDeNos + aux2] = fx[int(componente[2])][numeroDeNos + aux2] - 1
+                fx[int(componente[3])][numeroDeNos + aux] = fx[int(componente[3])][numeroDeNos + aux] + 1
+                fx[int(componente[4])][numeroDeNos + aux] = fx[int(componente[4])][numeroDeNos + aux] - 1
+                fx[numeroDeNos + aux][int(componente[3])] = fx[numeroDeNos + aux][int(componente[3])] - 1
+                fx[numeroDeNos + aux][int(componente[4])] = fx[numeroDeNos + aux][int(componente[4])] + 1
+                fx[numeroDeNos + aux2][int(componente[1])] = fx[numeroDeNos + aux2][int(componente[1])] - 1
+                fx[numeroDeNos + aux2][int(componente[2])] = fx[numeroDeNos + aux2][int(componente[2])] + 1
+                fx[numeroDeNos + aux2][numeroDeNos + aux] = fx[numeroDeNos + aux2][numeroDeNos + aux] + float(componente[5])
 
             elif (componente[0][0] == 'I' and componente[3] == 'AC'):
                 amp = float(componente[4])
@@ -300,10 +314,10 @@ def calculoMatrizes(listaConfig, numeroDeNos, tipoAnalise, numComponentesAnalise
                     if (componente[0] == componenteAnaliseModificada[0]):
                         aux = componenteAnaliseModificada[1]
                 
-                gm[int(componente[1])][numeroDeNos + aux] = gm[int(componente[1])][numeroDeNos + aux] + 1
-                gm[int(componente[2])][numeroDeNos + aux] = gm[int(componente[2])][numeroDeNos + aux] - 1
-                gm[numeroDeNos + aux][int(componente[1])] = gm[numeroDeNos + aux][int(componente[1])] - 1
-                gm[numeroDeNos + aux][int(componente[2])] = gm[numeroDeNos + aux][int(componente[2])] + 1
+                fx[int(componente[1])][numeroDeNos + aux] = fx[int(componente[1])][numeroDeNos + aux] + 1
+                fx[int(componente[2])][numeroDeNos + aux] = fx[int(componente[2])][numeroDeNos + aux] - 1
+                fx[numeroDeNos + aux][int(componente[1])] = fx[numeroDeNos + aux][int(componente[1])] - 1
+                fx[numeroDeNos + aux][int(componente[2])] = fx[numeroDeNos + aux][int(componente[2])] + 1
 
                 if (componente[3] == 'AC'):
                     amp = float(componente[4])
@@ -311,22 +325,22 @@ def calculoMatrizes(listaConfig, numeroDeNos, tipoAnalise, numComponentesAnalise
 
                     i[numeroDeNos + aux] = i[numeroDeNos + aux] - amp*np.exp(1j*fase)
 
-    gm = gm[1:,1:]
+    fx = fx[1:,1:]
     i = i[1:]
 
-    return gm, i
+    return fx, i
 
 # Funcao main, que, atraves das outras funcoes, fara a conta para encontrar as tensoes nodais
-def main(arqNetlist, tipoSimulacao, nosDesejados, parametrosSimulacao = []):
+def main(arqNetlist, tipoSimulacao, nosDesejados, parametrosSimulacao):
     
     listaConfig = listConfig(arqNetlist)
     numeroDeNos = calculoNos(listaConfig)
     componentesModificados, numComponentesModificados = calculoComponentesAnaliseModificada(listaConfig, tipoSimulacao)
     
     if (tipoSimulacao == 'DC'):
-        gm, i = calculoMatrizes(listaConfig, numeroDeNos, tipoSimulacao, numComponentesModificados, componentesModificados)
+        fx, i = calculoMatrizes(listaConfig, numeroDeNos, tipoSimulacao, numComponentesModificados, componentesModificados, parametrosSimulacao[1])
 
-        tensoesNodais = np.linalg.solve(gm, i)
+        tensoesNodais = np.linalg.solve(fx, i)
         tensoesNodaisDesejadas = []
 
         for no in nosDesejados:
@@ -334,39 +348,39 @@ def main(arqNetlist, tipoSimulacao, nosDesejados, parametrosSimulacao = []):
 
         return tensoesNodaisDesejadas
 
-    else:
-        freqs = np.logspace(np.log10(parametrosSimulacao[0]), np.log10(parametrosSimulacao[1]), parametrosSimulacao[2])
-        omegas = 2*np.pi*freqs
-        modulos = np.zeros([len(freqs), numeroDeNos - 1])
-        fases = np.zeros([len(freqs), numeroDeNos - 1])
-
-        for indice in range(len(freqs)):
-            gm, i = gm, i = calculoMatrizes(listaConfig, numeroDeNos, tipoSimulacao, numComponentesModificados, componentesModificados, omegas[indice])
-            tensoesNodais = np.linalg.solve(gm, i)
-
-            # Tirando as correntes que encontramos devida a analise modificada
-            tensoesNodais = tensoesNodais[:numeroDeNos - 1]
-
-            for i in range(len(tensoesNodais)):
-                modulos[indice][i] = 20*np.log10(np.abs(tensoesNodais[i]))
-                fases[indice][i] = np.degrees(np.angle(tensoesNodais[i]))
-
-        # To fazendo a transposta para ficar no formato Tensao x Frequencia
-        modulos = modulos.transpose()
-        fases = fases.transpose()
-
-        auxModulo = []
-        auxFase = []
-        modulosDesejados = []
-        fasesDesejadas = []
-        for noDesejado in nosDesejados:
-            for indice in range(len(freqs)):
-                auxModulo.append(modulos[noDesejado - 1][indice])
-                auxFase.append(fases[noDesejado - 1][indice])
-            modulosDesejados.append(auxModulo)
-            fasesDesejadas.append(auxFase)
-            auxModulo = []
-            auxFase = []
+    #else:
+    #    freqs = np.logspace(np.log10(parametrosSimulacao[0]), np.log10(parametrosSimulacao[1]), parametrosSimulacao[2])
+    #    omegas = 2*np.pi*freqs
+    #    modulos = np.zeros([len(freqs), numeroDeNos - 1])
+    #    fases = np.zeros([len(freqs), numeroDeNos - 1])
+#
+    #    for indice in range(len(freqs)):
+    #        fx, i = calculoMatrizes(listaConfig, numeroDeNos, tipoSimulacao, numComponentesModificados, componentesModificados, omegas[indice])
+    #        tensoesNodais = np.linalg.solve(fx, i)
+#
+    #        # Tirando as correntes que encontramos devida a analise modificada
+    #        tensoesNodais = tensoesNodais[:numeroDeNos - 1]
+#
+    #        for i in range(len(tensoesNodais)):
+    #            modulos[indice][i] = 20*np.log10(np.abs(tensoesNodais[i]))
+    #            fases[indice][i] = np.degrees(np.angle(tensoesNodais[i]))
+#
+    #    # To fazendo a transposta para ficar no formato Tensao x Frequencia
+    #    modulos = modulos.transpose()
+    #    fases = fases.transpose()
+#
+    #    auxModulo = []
+    #    auxFase = []
+    #    modulosDesejados = []
+    #    fasesDesejadas = []
+    #    for noDesejado in nosDesejados:
+    #        for indice in range(len(freqs)):
+    #            auxModulo.append(modulos[noDesejado - 1][indice])
+    #            auxFase.append(fases[noDesejado - 1][indice])
+    #        modulosDesejados.append(auxModulo)
+    #        fasesDesejadas.append(auxFase)
+    #        auxModulo = []
+    #        auxFase = []
             
         # Plotagem do gráfico
         for indice in range(len(modulosDesejados)):
@@ -388,4 +402,4 @@ def main(arqNetlist, tipoSimulacao, nosDesejados, parametrosSimulacao = []):
         return freqs, modulosDesejados, fasesDesejadas
 
 if __name__ == '__main__':
-    print(listConfig('teste1.txt'))
+    print(main('teste1.txt', 'DC', [1,2], [1e-10, [0,0.1,0.1]]))
