@@ -15,7 +15,7 @@ def listConfig(nomeArq):
         
         # Fazendo a organizacao da lista
         # De maneira resumida, o que estou fazendo é separar cada linha da netlist em uma linha da minha matriz de dados
-        # E em cada linha, os dados estao despostos de uma maneira mais intuitica
+        # E em cada linha, os dados estao despostos de uma maneira mais intuitiva
         for caracter in linha:
             if (caracter != ' ' and caracter != '\n'):
                 auxList.append(caracter)
@@ -31,8 +31,12 @@ def listConfig(nomeArq):
         listaConfig.append(auxList2)
     arqNetlist.close()
 
+    # Para os arquivos DC eu tenho que tirar as 4 primeiras linhas que tem os parametros e gabaritos da analise
+    if(nomeArq[5] != 'T'):
+        return listaConfig[4:]
     
-    return listaConfig[4:]
+    else:
+        return listaConfig
 
 # Funcao para fazer a conta de quantos nos tem no circuito
 def calculoNos(listaConfig):
@@ -84,7 +88,7 @@ def calculoComponentesAnaliseModificada(listaConfig, tipoAnalise):
 def calculoMatrizes(listaConfig, numeroDeNos, tipoAnalise, numComponentesAnaliseModificada, componentesAnaliseModificada, parametrosAnalise = [], omega = 0, tempoAtual = 0, deltaT = 0):
 
     # For para identificar o componente e montar a matriz com base no seu valor
-    if (tipoAnalise == 'DC'):
+    if (tipoAnalise == 'DC' or tipoAnalise == 'TRAN'):
 
         # Criando as matrizes com base no numero de nos do circuito
         fx = np.zeros([numeroDeNos + numComponentesAnaliseModificada, numeroDeNos + numComponentesAnaliseModificada])
@@ -150,8 +154,17 @@ def calculoMatrizes(listaConfig, numeroDeNos, tipoAnalise, numComponentesAnalise
                 fx[numeroDeNos + aux][int(componente[1])] = fx[numeroDeNos + aux][int(componente[1])] - 1
                 fx[numeroDeNos + aux][int(componente[2])] = fx[numeroDeNos + aux][int(componente[2])] + 1
 
-                if (componente[3] != 'AC'):
+                if (tipoAnalise == 'DC' and componente[3] == 'DC'):
                     i[numeroDeNos + aux] = i[numeroDeNos + aux] - int(componente[4])
+
+                elif (tipoAnalise == 'TRAN' and componente[3] == 'SIN'):
+                    valorDC = int(componente[4])
+                    amp = int(componente[5])
+                    freq = int(componente[6])
+                    omega = 2*np.pi*freq
+                    fase = int(componente[7])
+                    rad = fase*np.pi/180
+                    i[numeroDeNos + aux] = i[numeroDeNos + aux] - (valorDC + amp*np.cos(omega*(tempoAtual + deltaT) + rad))
 
             elif (componente[0][0] == 'E'):
                 for componenteAnaliseModificada in componentesAnaliseModificada:
@@ -441,9 +454,10 @@ def main(arqNetlist, tipoSimulacao, nosDesejados, parametrosSimulacao):
     else:
         tempoTotal = parametrosSimulacao[0]
         deltaT = parametrosSimulacao[1]
+        numTotalDePontos = int(tempoTotal / deltaT)
         tol = parametrosSimulacao[2]
 
-        tempo = np.linspace(0, tempoTotal, deltaT)
+        tempo = np.linspace(0, tempoTotal, numTotalDePontos)
         tensoes = np.zeros([len(tempo), numeroDeNos - 1])
 
         for indice in range(len(tempo)):
@@ -481,4 +495,5 @@ def main(arqNetlist, tipoSimulacao, nosDesejados, parametrosSimulacao):
 
 if __name__ == '__main__':
     print('Testes')
-    print(main('teste7.txt', 'DC', [1,2,3], [1e-14, [0,-5,4,5]]))
+    print(listConfig('testeTran1.txt'))
+    
