@@ -81,7 +81,7 @@ def calculoComponentesAnaliseModificada(listaConfig, tipoAnalise):
     return componentesAnaliseModificada, numComponentesAnaliseModificada
 
 # Funcao para montar a matriz de condutancia e a matriz resultado
-def calculoMatrizes(listaConfig, numeroDeNos, tipoAnalise, numComponentesAnaliseModificada, componentesAnaliseModificada, parametrosAnalise, omega = 0):
+def calculoMatrizes(listaConfig, numeroDeNos, tipoAnalise, numComponentesAnaliseModificada, componentesAnaliseModificada, parametrosAnalise = [], omega = 0, tempoAtual = 0, deltaT = 0):
 
     # For para identificar o componente e montar a matriz com base no seu valor
     if (tipoAnalise == 'DC'):
@@ -385,14 +385,14 @@ def main(arqNetlist, tipoSimulacao, nosDesejados, parametrosSimulacao):
             tensoesNodaisDesejadas.append(tensoesNodais[no - 1])
         return tensoesNodaisDesejadas
 
-    else:
+    elif (tipoSimulacao == 'AC'):
         freqs = np.logspace(np.log10(parametrosSimulacao[0]), np.log10(parametrosSimulacao[1]), parametrosSimulacao[2])
         omegas = 2*np.pi*freqs
         modulos = np.zeros([len(freqs), numeroDeNos - 1])
         fases = np.zeros([len(freqs), numeroDeNos - 1])
 
         for indice in range(len(freqs)):
-            fx, i = calculoMatrizes(listaConfig, numeroDeNos, tipoSimulacao, numComponentesModificados, componentesModificados, omegas[indice])
+            fx, i = calculoMatrizes(listaConfig, numeroDeNos, tipoSimulacao, numComponentesModificados, componentesModificados, [], omegas[indice])
             tensoesNodais = np.linalg.solve(fx, i)
 
             # Tirando as correntes que encontramos devida a analise modificada
@@ -437,5 +437,48 @@ def main(arqNetlist, tipoSimulacao, nosDesejados, parametrosSimulacao):
         pyplot.show()
 
         return freqs, modulosDesejados, fasesDesejadas
+    
+    else:
+        tempoTotal = parametrosSimulacao[0]
+        deltaT = parametrosSimulacao[1]
+        tol = parametrosSimulacao[2]
+
+        tempo = np.linspace(0, tempoTotal, deltaT)
+        tensoes = np.zeros([len(tempo), numeroDeNos - 1])
+
+        for indice in range(len(tempo)):
+            tempoAtual = tempo[indice]
+            fx, i = calculoMatrizes(listaConfig, numeroDeNos, tipoSimulacao, numComponentesModificados, componentesModificados, parametrosSimulacao[3], 0, tempoAtual, deltaT)
+
+            tensoesNodais = np.linalg.solve(fx, i)
+
+            # Tirando as correntes que encontramos devida a analise modificada
+            tensoesNodais = tensoesNodais[:numeroDeNos - 1]
+
+            for no in range(len(tensoesNodais)):
+                tensoes[indice][no] = tensoesNodais[no]
+
+        # Colocando a matriz de tensões no formato correto
+        tensoes = np.transpose(tensoes)
+
+        # Pegando apenas as tensoes desejadas
+        tensoesNodaisDesejadas = []
+        for noDesejado in nosDesejados:
+            auxTensoes = []
+            for indice in range(len(tempo)):
+                auxTensoes.append(tensoes[noDesejado - 1][indice])
+            tensoesNodaisDesejadas.append(auxTensoes)
+
+        # Plotagem do gráfico
+        for indice in range(len(tensoesNodaisDesejadas)):
+            pyplot.plot(tempo, tensoesNodaisDesejadas[indice])
+        # pyplot.title(arqNetlist[0].upper() + arqNetlist[1:7] + ' ' + arqNetlist[7:len(arqNetlist) - 4])
+        pyplot.ylabel('Tensão [V]')
+        pyplot.xlabel('Tempo [s]')
+        pyplot.show()
+
+        
 
 if __name__ == '__main__':
+    print('Testes')
+    print(main('teste7.txt', 'DC', [1,2,3], [1e-14, [0,-5,4,5]]))
