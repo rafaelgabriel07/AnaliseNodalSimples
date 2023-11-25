@@ -377,7 +377,7 @@ def main(arqNetlist, tipoSimulacao, nosDesejados, parametrosSimulacao):
             # Verificando as tolerancias
             for no in listaNosComponentesNaoLineares:
                 no = int(no)
-                if (parametrosSimulacao[1][no] != 0 and np.abs(tensoesNodais[no - 1] - parametrosSimulacao[1][no]) > tol):
+                if (no != 0 and np.abs(tensoesNodais[no - 1] - parametrosSimulacao[1][no]) > tol):
                     menorTol = False
                     break
 
@@ -387,7 +387,7 @@ def main(arqNetlist, tipoSimulacao, nosDesejados, parametrosSimulacao):
             # Alterando os parâmetros
             for no in listaNosComponentesNaoLineares:
                 no = int(no)
-                if (parametrosSimulacao[1][no] != 0):
+                if (no != 0):
                     parametrosSimulacao[1][no] = tensoesNodais[no - 1]
 
             aux += 1
@@ -460,17 +460,65 @@ def main(arqNetlist, tipoSimulacao, nosDesejados, parametrosSimulacao):
         tempo = np.linspace(0, tempoTotal, numTotalDePontos)
         tensoes = np.zeros([len(tempo), numeroDeNos - 1])
 
+        # Para componentes não-lineares
+        numComponentesNaoLineares = 0
+        # Fazendo a contagem de componentes nao lineares
+        for componente in listaConfig:
+            if (componente[0][0] == 'D'):
+                numComponentesNaoLineares += 1
+
+        listaNosComponentesNaoLineares = np.zeros(2*numComponentesNaoLineares)
+        indice = 0
+        for componente in listaConfig:
+            if (componente[0][0] == 'D'):
+                listaNosComponentesNaoLineares[indice] = int(componente[1])
+                listaNosComponentesNaoLineares[indice + 1] = int(componente[2])
+                indice += 2
+
         for indice in range(len(tempo)):
             tempoAtual = tempo[indice]
-            fx, i = calculoMatrizes(listaConfig, numeroDeNos, tipoSimulacao, numComponentesModificados, componentesModificados, parametrosSimulacao[3], 0, tempoAtual, deltaT)
+            if (numComponentesNaoLineares == 0):
+                fx, i = calculoMatrizes(listaConfig, numeroDeNos, tipoSimulacao, numComponentesModificados, componentesModificados, parametrosSimulacao[3], 0, tempoAtual, deltaT)
 
-            tensoesNodais = np.linalg.solve(fx, i)
+                tensoesNodais = np.linalg.solve(fx, i)
 
-            # Tirando as correntes que encontramos devida a analise modificada
-            tensoesNodais = tensoesNodais[:numeroDeNos - 1]
+                # Tirando as correntes que encontramos devida a analise modificada
+                tensoesNodais = tensoesNodais[:numeroDeNos - 1]
 
-            for no in range(len(tensoesNodais)):
-                tensoes[indice][no] = tensoesNodais[no]
+                for no in range(len(tensoesNodais)):
+                    tensoes[indice][no] = tensoesNodais[no]
+
+            else:
+                aux = 0
+                while aux < 1000:
+                    menorTol = True
+                    fx, i = calculoMatrizes(listaConfig, numeroDeNos, tipoSimulacao, numComponentesModificados, componentesModificados, parametrosSimulacao[3], 0, tempoAtual, deltaT)
+                    tensoesNodais = np.linalg.solve(fx, i)
+
+                    # Tirando as correntes que encontramos devida a analise modificada
+                    tensoesNodais = tensoesNodais[:numeroDeNos - 1]
+                    print(tensoesNodais[1])
+
+                    # Verificando as tolerancias
+                    for no in listaNosComponentesNaoLineares:
+                        no = int(no)
+                        if (no != 0 and np.abs(tensoesNodais[no - 1] - parametrosSimulacao[3][no]) > tol):
+                            menorTol = False
+                            break
+                        
+                    if (menorTol):
+                        break
+                    
+                    # Alterando os parâmetros
+                    for no in listaNosComponentesNaoLineares:
+                        no = int(no)
+                        if (no != 0):
+                            parametrosSimulacao[3][no] = tensoesNodais[no - 1]
+
+                    aux += 1
+
+                for no in range(len(tensoesNodais)):
+                    tensoes[indice][no] = tensoesNodais[no]
 
         # Colocando a matriz de tensões no formato correto
         tensoes = np.transpose(tensoes)
@@ -486,7 +534,7 @@ def main(arqNetlist, tipoSimulacao, nosDesejados, parametrosSimulacao):
         # Plotagem do gráfico
         for indice in range(len(tensoesNodaisDesejadas)):
             pyplot.plot(tempo, tensoesNodaisDesejadas[indice])
-        # pyplot.title(arqNetlist[0].upper() + arqNetlist[1:7] + ' ' + arqNetlist[7:len(arqNetlist) - 4])
+        #pyplot.title(arqNetlist[0].upper() + arqNetlist[1:7] + ' ' + arqNetlist[7:len(arqNetlist) - 4])
         pyplot.ylabel('Tensão [V]')
         pyplot.xlabel('Tempo [s]')
         pyplot.show()
@@ -495,12 +543,13 @@ def main(arqNetlist, tipoSimulacao, nosDesejados, parametrosSimulacao):
 
 if __name__ == '__main__':
     print('Testes')
-    #print(main('teste1.txt', 'DC', [1,2], [1e-10, [0,0.1,0.1]]))
-    #print(main('teste2.txt', 'DC', [2], [1e-14, [0,3,3]]))
-    #print(main('teste3.txt', 'DC', [2], [1e-12, [0,0,2]]))
-    #print(main('teste4.txt', 'DC', [2], [1e-12, [0,0,2]]))
-    #print(main('teste5.txt', 'DC', [1,2], [1e-12, [0,1,2]]))
-    #print(main('teste6.txt', 'DC', [1,2,3], [1e-14, [0,5,1,-5]]))
-    #print(main('teste7.txt', 'DC', [1,2,3], [1e-14, [0,-5,4,5]]))
-    print(main('testeTran1.txt','TRAN', [1,2],[2, 0.2e-3, 1e-10, [0,1,0.5]]))
+    print(main('teste1.txt', 'DC', [1,2], [1e-10, [0,0.1,0.1]]))
+    print(main('teste2.txt', 'DC', [2], [1e-14, [0,3,3]]))
+    print(main('teste3.txt', 'DC', [2], [1e-12, [0,0,2]]))
+    print(main('teste4.txt', 'DC', [2], [1e-12, [0,0,2]]))
+    print(main('teste5.txt', 'DC', [1,2], [1e-12, [0,1,2]]))
+    print(main('teste6.txt', 'DC', [1,2,3], [1e-14, [0,5,1,-5]]))
+    print(main('teste7.txt', 'DC', [1,2,3], [1e-14, [0,-5,4,5]]))
+    #print(main('testeTran1.txt','TRAN', [1,2],[2, 0.2e-3, 1e-10, [0,1,0.5]]))
+    #print(main('testeTran2.txt','TRAN',[1,2],[2, 0.2e-3, 1e-4, [0,1,0]]))
     
