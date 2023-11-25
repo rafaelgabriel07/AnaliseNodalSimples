@@ -477,7 +477,7 @@ def main(arqNetlist, tipoSimulacao, nosDesejados, parametrosSimulacao):
         pyplot.xlabel('Tempo [s]')
         pyplot.show()
 
-        
+        return tempo, modulosDesejados
 
 if __name__ == '__main__':
     print('Testes')
