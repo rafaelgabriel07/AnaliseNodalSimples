@@ -491,9 +491,9 @@ def main(arqNetlist, tipoSimulacao, nosDesejados, parametrosSimulacao):
         pyplot.xlabel('Tempo [s]')
         pyplot.show()
 
-        return tempo, modulosDesejados
+        return tempo, tensoesNodaisDesejadas
 
 if __name__ == '__main__':
     print('Testes')
-    print(listConfig('testeTran1.txt'))
+    print(main('testeTran1.txt','TRAN', [1,2],[2, 0.2e-3, 1e-10, [0,1,0.5]]))
     
