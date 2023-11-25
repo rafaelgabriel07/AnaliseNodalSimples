@@ -439,10 +439,3 @@ def main(arqNetlist, tipoSimulacao, nosDesejados, parametrosSimulacao):
         return freqs, modulosDesejados, fasesDesejadas
 
 if __name__ == '__main__':
-    print(main('teste1.txt', 'DC', [1,2], [1e-10, [0,0.1,0.1]]))
-    print(main('teste2.txt', 'DC', [2], [1e-14, [0,3,3]]))
-    print(main('teste3.txt', 'DC', [2], [1e-12, [0,0,2]]))
-    print(main('teste4.txt', 'DC', [2], [1e-12, [0,0,2]]))
-    print(main('teste5.txt', 'DC', [1,2], [1e-12, [0,1,2]]))
-    print(main('teste6.txt', 'DC', [1,2,3], [1e-14, [0,5,1,-5]]))
-    print(main('teste7.txt', 'DC', [1,2,3], [1e-14, [0,-5,4,5]]))
